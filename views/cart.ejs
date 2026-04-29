@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              red: '#EF4444',
+              'red-hover': '#DC2626',
+              'red-light': '#FEF2F2',
+              dark: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-feature-settings: "cv11", "ss01"; }
+    .qty-btn:hover { background-color: #F1F5F9; color: #1E293B; }
+    .custom-checkbox { appearance: none; -webkit-appearance: none; width: 18px; height: 18px; border: 1.5px solid #CBD5E1; border-radius: 4px; background: #FFFFFF; cursor: pointer; transition: all 0.15s ease; position: relative; flex-shrink: 0; }
+    .custom-checkbox:checked { background: #EF4444; border-color: #EF4444; }
+    .custom-checkbox:checked::after { content: ''; position: absolute; left: 5px; top: 2px; width: 5px; height: 9px; border: solid white; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); }
+    .item-exit { animation: itemSlideOut 0.3s ease forwards; }
+    @keyframes itemSlideOut { to { opacity: 0; transform: translateX(-16px); max-height: 0; padding: 0; margin: 0; overflow: hidden; } }
+  </style>
+</head>
+<body class="bg-white font-sans text-brand-dark min-h-screen">
+
+  <div id="toast-container" class="fixed top-4 right-4 z-[200] flex flex-col gap-2 items-end pointer-events-none"></div>
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 h-14 flex items-center px-4 sm:px-8">
+      <a href="/" class="flex items-center gap-2">
+        <div class="w-7 h-7 bg-brand-red rounded-md flex items-center justify-center">
+          <i data-lucide="cog" class="w-3.5 h-3.5 text-white"></i>
+        </div>
+        <span class="text-sm font-semibold text-brand-dark hidden sm:block">AutoPart<span class="text-brand-red">Center</span></span>
+      </a>
+      <div class="ml-auto">
+        <a href="/auth/logout" class="text-xs font-semibold text-slate-500 hover:text-brand-red">Logout</a>
+      </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="mb-6">
+      <%- include('partials/back-button', { fallback: '/', wrapperClass: '' }) %>
+    </div>
+
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-brand-dark">Keranjang Belanja <span class="text-slate-400 font-normal">(<%= cartItems.length %> Item)</span></h1>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-8">
+      <!-- LEFT: ITEMS -->
+      <div class="flex-1 space-y-4">
+        <% if (cartItems.length > 0) { %>
+            <div class="flex items-center justify-between bg-slate-50 rounded-md border border-slate-100 px-4 py-3 mb-4">
+                <label class="flex items-center gap-3 cursor-pointer select-none">
+                    <input type="checkbox" class="custom-checkbox" id="select-all" checked onclick="toggleSelectAll(this)">
+                    <span class="text-sm text-slate-600 font-medium">Pilih Semua</span>
+                </label>
+            </div>
+
+            <div id="cart-list" class="space-y-3">
+                <% cartItems.forEach(item => { %>
+                    <div class="cart-row bg-white rounded-md border border-slate-200 p-5 flex gap-4" data-id="<%= item.id %>">
+                        <div class="flex items-start pt-1">
+                            <input type="checkbox" class="custom-checkbox item-check" checked data-id="<%= item.id %>" data-price="<%= item.harga %>" data-qty="<%= item.jumlah %>" onchange="calculateSummary()">
+                        </div>
+                        <div class="w-20 h-20 bg-slate-50 rounded-md overflow-hidden flex items-center justify-center p-2 shrink-0 border border-slate-100">
+                            <img src="<%= item.gambar || '/images/default-produk.png' %>" alt="" class="w-full h-full object-contain mix-blend-multiply">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start gap-4">
+                                <div class="min-w-0">
+                                    <h3 class="text-sm font-semibold text-brand-dark leading-snug truncate"><%= item.nama_produk %></h3>
+                                    <p class="text-[11px] text-slate-400 mt-1"><%= item.nama_brand %></p>
+                                </div>
+                                <button onclick="removeItem(<%= item.id %>)" class="text-slate-300 hover:text-red-500 transition-colors">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <div class="flex items-end justify-between mt-4">
+                                <div>
+                                    <p class="text-[11px] text-slate-400">Rp<%= item.harga.toLocaleString('id-ID') %> x <%= item.jumlah %></p>
+                                    <p class="text-base font-bold text-brand-dark">Rp<%= (item.harga * item.jumlah).toLocaleString('id-ID') %></p>
+                                </div>
+                                <div class="flex items-center border border-slate-200 rounded-md">
+                                    <button onclick="updateQty(<%= item.id %>, -1)" class="w-8 h-8 flex items-center justify-center text-slate-400"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
+                                    <span class="w-10 h-8 flex items-center justify-center text-xs font-semibold"><%= item.jumlah %></span>
+                                    <button onclick="updateQty(<%= item.id %>, 1)" class="w-8 h-8 flex items-center justify-center text-slate-400"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        <% } else { %>
+            <div class="bg-slate-50 rounded-md border border-slate-100 py-20 flex flex-col items-center text-center">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 border border-slate-200">
+                    <i data-lucide="shopping-cart" class="w-8 h-8 text-slate-200"></i>
+                </div>
+                <h2 class="text-lg font-bold text-brand-dark">Keranjang Kosong</h2>
+                <p class="text-sm text-slate-400 mb-8">Belum ada barang di keranjang Anda.</p>
+                <a href="/" class="bg-brand-red text-white px-6 py-2.5 rounded-md text-sm font-semibold">Mulai Belanja</a>
+            </div>
+        <% } %>
+      </div>
+
+      <!-- RIGHT: SUMMARY -->
+      <div class="lg:w-[320px]">
+        <div class="bg-slate-50 rounded-md border border-slate-200 p-6 sticky top-20">
+          <h3 class="text-sm font-semibold text-brand-dark mb-6">Ringkasan Pesanan</h3>
+          <div class="space-y-4 mb-6">
+            <div class="flex justify-between text-sm">
+              <span class="text-slate-500">Subtotal</span>
+              <span id="subtotal" class="font-medium text-brand-dark">Rp0</span>
+            </div>
+          </div>
+          <div class="h-px bg-slate-200 mb-6"></div>
+          <div class="flex justify-between items-end mb-8">
+            <span class="text-sm font-semibold text-brand-dark">Total</span>
+            <span id="total" class="text-xl font-bold text-brand-dark">Rp0</span>
+          </div>
+          <button id="checkout-btn" onclick="goToCheckout()" class="w-full h-12 bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-md transition-all disabled:bg-slate-200 disabled:text-slate-400" disabled>
+            Beli Sekarang
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function updateQty(id, delta) {
+        fetch('/cart/update-qty', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, delta })
+        }).then(() => location.reload());
+    }
+
+    function removeItem(id) {
+        if(confirm('Hapus item dari keranjang?')) {
+            fetch('/cart/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            }).then(() => location.reload());
+        }
+    }
+
+    function toggleSelectAll(el) {
+        document.querySelectorAll('.item-check').forEach(check => {
+            check.checked = el.checked;
+        });
+        calculateSummary();
+    }
+
+    function calculateSummary() {
+        let subtotal = 0;
+        let count = 0;
+        document.querySelectorAll('.item-check:checked').forEach(check => {
+            const price = parseInt(check.dataset.price);
+            const qty = parseInt(check.dataset.qty);
+            subtotal += price * qty;
+            count++;
+        });
+
+        document.getElementById('subtotal').textContent = 'Rp' + subtotal.toLocaleString('id-ID');
+        document.getElementById('total').textContent = 'Rp' + subtotal.toLocaleString('id-ID');
+        document.getElementById('checkout-btn').disabled = count === 0;
+    }
+
+    function goToCheckout() {
+        const selectedIds = Array.from(document.querySelectorAll('.item-check:checked')).map(c => c.dataset.id);
+        window.location.href = '/checkout?ids=' + selectedIds.join(',');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        calculateSummary();
+    });
+  </script>
+</body>
+</html>

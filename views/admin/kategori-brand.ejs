@@ -1,0 +1,222 @@
+<%- include('partials/header') %>
+<%- include('partials/sidebar') %>
+
+<div class="mb-8">
+  <h1 class="text-lg font-bold text-brand-dark tracking-tight">Manajemen Master Data</h1>
+  <p class="text-xs text-slate-400 mt-1">Kelola daftar kategori dan brand suku cadang otomotif.</p>
+</div>
+
+<div class="grid lg:grid-cols-2 gap-6">
+
+  <!-- ====== PANEL A: KATEGORI ====== -->
+  <div>
+    <div class="bg-white rounded-md border border-slate-200 overflow-hidden shadow-sm">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-7 h-7 bg-slate-50 rounded-md flex items-center justify-center">
+            <i data-lucide="folder-tree" class="w-3.5 h-3.5 text-slate-500"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold text-brand-dark">Daftar Kategori</h3>
+            <p class="text-[10px] text-slate-400 mt-0.5"><%= kategoriList.length %> kategori</p>
+          </div>
+        </div>
+        <button onclick="openKatModal()" class="w-8 h-8 flex items-center justify-center bg-brand-red hover:bg-brand-red-hover text-white rounded-md transition-all">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="flex items-center px-5 py-2.5 border-b border-slate-50 bg-slate-50/50">
+        <span class="w-10 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">#</span>
+        <span class="flex-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Nama Kategori</span>
+        <span class="w-20 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right">Aksi</span>
+      </div>
+
+      <div class="divide-y divide-slate-50">
+        <% kategoriList.forEach((k, i) => { %>
+            <div class="list-row flex items-center px-5 py-3">
+              <span class="w-10 text-[13px] text-slate-400 tabular-nums"><%= i + 1 %></span>
+              <span class="flex-1 text-[14px] text-brand-dark font-medium truncate"><%= k.nama_kategori %></span>
+              <div class="w-20 flex items-center justify-end gap-1">
+                <button onclick="openKatModal('<%= k.id %>', '<%= k.nama_kategori %>')" class="w-7 h-7 flex items-center justify-center rounded text-blue-400 hover:bg-blue-50" title="Edit">
+                  <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                </button>
+                <button onclick="deleteData('kategori', '<%= k.id %>', '<%= k.nama_kategori %>')" class="w-7 h-7 flex items-center justify-center rounded text-brand-red hover:bg-red-50" title="Hapus">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+        <% }) %>
+        <% if (kategoriList.length === 0) { %>
+            <div class="px-5 py-12 text-center text-slate-400 text-xs">Belum ada kategori</div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== PANEL B: BRAND ====== -->
+  <div>
+    <div class="bg-white rounded-md border border-slate-200 overflow-hidden shadow-sm">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-7 h-7 bg-slate-50 rounded-md flex items-center justify-center">
+            <i data-lucide="award" class="w-3.5 h-3.5 text-slate-500"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold text-brand-dark">Daftar Brand</h3>
+            <p class="text-[10px] text-slate-400 mt-0.5"><%= brandList.length %> brand</p>
+          </div>
+        </div>
+        <button onclick="openBrandModal()" class="w-8 h-8 flex items-center justify-center bg-brand-red hover:bg-brand-red-hover text-white rounded-md transition-all">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="flex items-center px-5 py-2.5 border-b border-slate-50 bg-slate-50/50">
+        <span class="w-10 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">#</span>
+        <span class="flex-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Nama Brand</span>
+        <span class="w-20 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right">Aksi</span>
+      </div>
+
+      <div class="divide-y divide-slate-50">
+        <% brandList.forEach((b, i) => { %>
+            <div class="list-row flex items-center px-5 py-3">
+              <span class="w-10 text-[13px] text-slate-400 tabular-nums"><%= i + 1 %></span>
+              <span class="flex-1 text-[14px] text-brand-dark font-medium truncate"><%= b.nama_brand %></span>
+              <div class="w-20 flex items-center justify-end gap-1">
+                <button onclick="openBrandModal('<%= b.id %>', '<%= b.nama_brand %>')" class="w-7 h-7 flex items-center justify-center rounded text-blue-400 hover:bg-blue-50" title="Edit">
+                  <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                </button>
+                <button onclick="deleteData('brand', '<%= b.id %>', '<%= b.nama_brand %>')" class="w-7 h-7 flex items-center justify-center rounded text-brand-red hover:bg-red-50" title="Hapus">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+        <% }) %>
+        <% if (brandList.length === 0) { %>
+            <div class="px-5 py-12 text-center text-slate-400 text-xs">Belum ada brand</div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Kategori Modal -->
+<div id="kat-modal" class="modal-hidden fixed inset-0 z-[150] flex items-center justify-center p-4">
+    <div class="modal-overlay absolute inset-0 bg-black/30" onclick="closeKatModal()"></div>
+    <div class="modal-panel relative bg-white rounded-lg shadow-xl w-full max-w-sm overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <h3 id="kat-modal-title" class="text-sm font-semibold text-brand-dark">Tambah Kategori</h3>
+        <button onclick="closeKatModal()" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-400">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="px-5 py-5">
+        <input type="hidden" id="kat-edit-id" value="">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1.5">Nama Kategori <span class="text-brand-red">*</span></label>
+          <input id="kat-input" type="text" placeholder="Contoh: Mesin & Perawatan" class="input-field w-full h-10 px-3 border border-slate-200 rounded-md text-[14px] text-brand-dark placeholder-slate-400">
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-100 bg-slate-50/50">
+        <button onclick="closeKatModal()" class="h-9 px-4 text-sm font-medium text-slate-500 rounded-md hover:bg-white transition-colors">Batal</button>
+        <button onclick="saveKat()" class="h-9 px-5 bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-md transition-colors">Simpan</button>
+      </div>
+    </div>
+</div>
+
+<!-- Brand Modal -->
+<div id="brand-modal" class="modal-hidden fixed inset-0 z-[150] flex items-center justify-center p-4">
+    <div class="modal-overlay absolute inset-0 bg-black/30" onclick="closeBrandModal()"></div>
+    <div class="modal-panel relative bg-white rounded-lg shadow-xl w-full max-w-sm overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <h3 id="brand-modal-title" class="text-sm font-semibold text-brand-dark">Tambah Brand</h3>
+        <button onclick="closeBrandModal()" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-400">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="px-5 py-5">
+        <input type="hidden" id="brand-edit-id" value="">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1.5">Nama Brand <span class="text-brand-red">*</span></label>
+          <input id="brand-input" type="text" placeholder="Contoh: Denso" class="input-field w-full h-10 px-3 border border-slate-200 rounded-md text-[14px] text-brand-dark placeholder-slate-400">
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-100 bg-slate-50/50">
+        <button onclick="closeBrandModal()" class="h-9 px-4 text-sm font-medium text-slate-500 rounded-md hover:bg-white transition-colors">Batal</button>
+        <button onclick="saveBrand()" class="h-9 px-5 bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-md transition-colors">Simpan</button>
+      </div>
+    </div>
+</div>
+
+<script>
+    function openKatModal(id = '', nama = '') {
+        document.getElementById('kat-modal-title').textContent = id ? 'Edit Kategori' : 'Tambah Kategori';
+        document.getElementById('kat-edit-id').value = id;
+        document.getElementById('kat-input').value = nama;
+        document.getElementById('kat-modal').classList.remove('modal-hidden');
+    }
+    function closeKatModal() { document.getElementById('kat-modal').classList.add('modal-hidden'); }
+    
+    function saveKat() {
+        const id = document.getElementById('kat-edit-id').value;
+        const nama = document.getElementById('kat-input').value;
+        if(!nama) return showToast('Nama wajib diisi', 'error');
+        const url = id ? `/admin/kategori/update/${id}` : '/admin/kategori/store';
+        
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nama })
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                showToast(data.message, 'error');
+            }
+        });
+    }
+
+    function openBrandModal(id = '', nama = '') {
+        document.getElementById('brand-modal-title').textContent = id ? 'Edit Brand' : 'Tambah Brand';
+        document.getElementById('brand-edit-id').value = id;
+        document.getElementById('brand-input').value = nama;
+        document.getElementById('brand-modal').classList.remove('modal-hidden');
+    }
+    function closeBrandModal() { document.getElementById('brand-modal').classList.add('modal-hidden'); }
+
+    function saveBrand() {
+        const id = document.getElementById('brand-edit-id').value;
+        const nama = document.getElementById('brand-input').value;
+        if(!nama) return showToast('Nama wajib diisi', 'error');
+        const url = id ? `/admin/brand/update/${id}` : '/admin/brand/store';
+        
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nama })
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                showToast(data.message, 'error');
+            }
+        });
+    }
+
+    function deleteData(type, id, nama) {
+        if (confirm(`Apakah Anda yakin ingin menghapus ${type} "${nama}"?`)) {
+            fetch(`/admin/${type}/delete/${id}`, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        showToast(data.message, 'error');
+                    }
+                });
+        }
+    }
+</script>
+
+<%- include('partials/footer') %>

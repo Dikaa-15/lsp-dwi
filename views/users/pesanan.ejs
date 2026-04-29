@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              red: '#EF4444',
+              'red-hover': '#DC2626',
+              dark: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-feature-settings: "cv11", "ss01"; }
+  </style>
+</head>
+<body class="bg-slate-50 font-sans text-brand-dark min-h-screen">
+
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 h-14 flex items-center px-4 sm:px-8 shadow-sm">
+      <a href="/" class="flex items-center gap-2">
+        <div class="w-7 h-7 bg-brand-red rounded-md flex items-center justify-center">
+          <i data-lucide="cog" class="w-3.5 h-3.5 text-white"></i>
+        </div>
+        <span class="text-sm font-semibold text-brand-dark hidden sm:block">AutoPart<span class="text-brand-red">Center</span></span>
+      </a>
+      <div class="ml-auto flex items-center gap-4">
+        <span class="text-xs font-medium text-slate-500 hidden sm:block">Halo, <%= user.username %></span>
+        <a href="/auth/logout" class="text-xs font-semibold text-slate-500 hover:text-brand-red">Logout</a>
+      </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="mb-6">
+      <%- include('../partials/back-button', { fallback: '/', wrapperClass: '' }) %>
+    </div>
+
+    <% const tabs = [
+      { key: 'semua', label: 'Semua' },
+      { key: 'menunggu_verifikasi', label: 'Menunggu Verifikasi' },
+      { key: 'diproses', label: 'Diproses' },
+      { key: 'dikirim', label: 'Dikirim' },
+      { key: 'selesai', label: 'Selesai' },
+      { key: 'dibatalkan', label: 'Dibatalkan' }
+    ]; %>
+
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-brand-dark">Pesanan Saya</h1>
+      <p class="text-sm text-slate-400 mt-1">Pantau status pesanan dan riwayat belanja Anda.</p>
+    </div>
+
+    <div class="mb-8 overflow-x-auto">
+      <div class="inline-flex gap-2 min-w-full sm:min-w-0">
+        <% tabs.forEach(tab => { %>
+          <a
+            href="/users/pesanan?tab=<%= tab.key %>"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold whitespace-nowrap transition-colors <%= activeTab === tab.key ? 'bg-brand-red text-white border-brand-red shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:border-brand-red hover:text-brand-red' %>"
+          >
+            <span><%= tab.label %></span>
+            <span class="min-w-[1.5rem] h-5 px-1.5 rounded-full text-[11px] inline-flex items-center justify-center <%= activeTab === tab.key ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500' %>">
+              <%= tabCounts[tab.key] || 0 %>
+            </span>
+          </a>
+        <% }) %>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <% orders.forEach(o => { %>
+        <div class="bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-14 h-14 rounded-xl border border-slate-100 bg-slate-50 overflow-hidden flex-shrink-0">
+                        <img
+                          src="<%= o.first_product_image || '/images/default-produk.png' %>"
+                          alt="Produk pesanan <%= o.id_pembelian %>"
+                          class="w-full h-full object-contain mix-blend-multiply"
+                        >
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">ID Pesanan</p>
+                        <p class="text-sm font-mono font-bold text-brand-dark"><%= o.id_pembelian %></p>
+                    </div>
+                </div>
+                <div class="text-left sm:text-right">
+                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Status</p>
+                    <span class="inline-flex px-2 py-1 rounded text-[10px] font-bold uppercase 
+                        <%= o.status === 'menunggu_verifikasi' ? 'bg-orange-100 text-orange-600' : 
+                           o.status === 'diproses' ? 'bg-blue-100 text-blue-600' : 
+                           o.status === 'dikirim' ? 'bg-green-100 text-green-600' : 
+                           o.status === 'selesai' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-600' %>">
+                        <%= o.status.replace('_', ' ') %>
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                <div>
+                    <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Tanggal</p>
+                    <p class="text-xs font-medium"><%= new Date(o.tanggal_transaksi).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) %></p>
+                </div>
+                <div>
+                    <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Item</p>
+                    <p class="text-xs font-medium"><%= o.item_count %> Produk</p>
+                </div>
+                <div>
+                    <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Total</p>
+                    <p class="text-xs font-bold text-brand-dark">Rp<%= o.total_bayar.toLocaleString('id-ID') %></p>
+                </div>
+                <div>
+                    <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Resi</p>
+                    <p class="text-xs font-mono font-medium text-slate-600"><%= o.resi || '-' %></p>
+                </div>
+            </div>
+
+            <% if (o.status === 'menunggu_verifikasi') { %>
+                <div class="mt-6 pt-4 border-t border-slate-50">
+                    <div class="flex items-center gap-2 text-[11px] text-orange-600 bg-orange-50 px-3 py-2 rounded">
+                        <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                        <span>Pembayaran sedang diverifikasi oleh admin. Mohon tunggu maksimal 1x24 jam.</span>
+                    </div>
+                </div>
+            <% } else if (o.status === 'dikirim') { %>
+                <div class="mt-6 pt-4 border-t border-slate-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div class="flex items-center gap-2 text-[11px] text-blue-600 bg-blue-50 px-3 py-2 rounded">
+                        <i data-lucide="truck" class="w-3.5 h-3.5"></i>
+                        <span>Pesanan sudah dikirim.</span>
+                    </div>
+                    <button
+                      type="button"
+                      onclick="markAsDone('<%= o.id_pembelian %>')"
+                      class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-colors"
+                    >
+                      <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                      Tandai Selesai
+                    </button>
+                </div>
+            <% } %>
+        </div>
+      <% }) %>
+
+      <% if (orders.length === 0) { %>
+        <div class="bg-white rounded-lg border border-slate-200 py-20 text-center">
+            <i data-lucide="package" class="w-12 h-12 text-slate-200 mx-auto mb-4"></i>
+            <p class="text-slate-500 text-sm font-medium">
+              <%= activeTab === 'semua' ? 'Anda belum memiliki pesanan.' : 'Belum ada pesanan pada tab ini.' %>
+            </p>
+            <a href="/" class="text-brand-red text-xs font-bold mt-4 inline-block hover:underline">Mulai belanja sekarang →</a>
+        </div>
+      <% } %>
+    </div>
+  </main>
+
+  <script>
+    function markAsDone(orderId) {
+      if (!confirm('Tandai pesanan ini sebagai selesai?')) return;
+
+      fetch(`/users/pesanan/${orderId}/selesai`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            location.reload();
+            return;
+          }
+
+          alert(data.message || 'Gagal memperbarui status pesanan.');
+        })
+        .catch(() => alert('Gagal memperbarui status pesanan.'));
+    }
+
+    lucide.createIcons();
+  </script>
+</body>
+</html>

@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar Akun — AutoPart Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              red: '#F87171',
+              'red-hover': '#EF4444',
+              'red-light': '#FEF2F2',
+              dark: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-feature-settings: "cv11", "ss01"; }
+
+    .input-field {
+      transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .input-field:focus-within {
+      box-shadow: 0 0 0 2px rgba(248,113,113,0.25);
+      border-color: #F87171;
+    }
+
+    .input-error {
+      border-color: #F87171 !important;
+      box-shadow: 0 0 0 2px rgba(248,113,113,0.15) !important;
+    }
+
+    @keyframes errorIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .error-text { animation: errorIn 0.2s ease forwards; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { animation: spin 0.7s linear infinite; }
+
+    .btn-loading { pointer-events: none; opacity: 0.85; }
+
+    .login-image {
+      filter: saturate(0.2) brightness(0.9);
+      transition: filter 0.6s ease;
+    }
+    .login-image:hover {
+      filter: saturate(0.35) brightness(0.93);
+    }
+
+    .pw-toggle { transition: color 0.15s ease; }
+    .pw-toggle:hover { color: #64748B; }
+
+    .custom-checkbox {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 4px;
+      background: #FFFFFF;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .custom-checkbox:checked {
+      background: #F87171;
+      border-color: #F87171;
+    }
+    .custom-checkbox:checked::after {
+      content: '';
+      position: absolute;
+      left: 4.5px;
+      top: 1.5px;
+      width: 5px;
+      height: 9px;
+      border: solid white;
+      border-width: 0 1.5px 1.5px 0;
+      transform: rotate(45deg);
+    }
+    .custom-checkbox:focus-visible {
+      box-shadow: 0 0 0 2px rgba(248,113,113,0.25);
+    }
+    .custom-checkbox:hover { border-color: #94A3B8; }
+
+    .link-anim { position: relative; }
+    .link-anim::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -1px;
+      width: 0;
+      height: 1px;
+      background: #F87171;
+      transition: width 0.25s ease;
+    }
+    .link-anim:hover::after { width: 100%; }
+
+    .toast-enter {
+      animation: toastSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .toast-exit {
+      animation: toastFade 0.25s ease forwards;
+    }
+    @keyframes toastSlide {
+      from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes toastFade {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(-8px) scale(0.97); }
+    }
+
+    /* Textarea resize handle */
+    textarea { resize: vertical; }
+
+    /* Password strength bar */
+    .strength-segment {
+      transition: background-color 0.25s ease;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-white font-sans text-brand-dark min-h-screen">
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2"></div>
+
+  <div class="min-h-screen flex">
+
+    <!-- ====== LEFT: Image Panel ====== -->
+    <div class="hidden lg:flex lg:w-[45%] xl:w-[48%] bg-slate-50 relative overflow-hidden">
+      <img
+        src="https://picsum.photos/seed/auto-garage-tools-neat/1200/1600.jpg"
+        alt="Aesthetic automotive workshop"
+        class="login-image absolute inset-0 w-full h-full object-cover"
+      >
+    </div>
+
+    <!-- ====== RIGHT: Registration Form ====== -->
+    <div class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-10 xl:px-16 py-8">
+      <div class="w-full max-w-[440px]">
+
+        <!-- Mobile Logo -->
+        <div class="flex lg:hidden items-center gap-2 mb-8">
+          <div class="w-8 h-8 bg-brand-red rounded-md flex items-center justify-center">
+            <i data-lucide="cog" class="w-4 h-4 text-white"></i>
+          </div>
+          <span class="text-lg font-semibold text-brand-dark tracking-tight">AutoPart<span class="text-brand-red">Center</span></span>
+        </div>
+
+        <!-- Header -->
+        <div class="mb-8">
+          <h1 class="text-2xl font-bold text-brand-dark tracking-tight leading-tight">
+            Buat Akun Baru
+          </h1>
+          <p class="mt-2 text-sm text-slate-500 leading-relaxed">
+            Mulai belanja sparepart original dengan harga terbaik.
+          </p>
+        </div>
+
+        <!-- Registration Form -->
+        <form id="reg-form" novalidate onsubmit="handleRegister(event)" class="space-y-5">
+
+          <!-- Row: Username & Email -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Username -->
+            <div>
+              <label for="username" class="block text-sm font-medium text-brand-dark mb-1.5">Username</label>
+              <div class="input-field flex items-center border border-slate-200 rounded-md bg-white h-11 px-3" id="username-wrapper">
+                <i data-lucide="user" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <input
+                  id="username"
+                  type="text"
+                  placeholder="username_anda"
+                  autocomplete="username"
+                  class="flex-1 bg-transparent text-[16px] text-brand-dark placeholder-slate-400 ml-3 outline-none"
+                  aria-describedby="username-error"
+                >
+              </div>
+              <p id="username-error" class="error-text hidden text-xs text-brand-red mt-1.5 flex items-center gap-1" role="alert">
+                <i data-lucide="alert-circle" class="w-3 h-3 shrink-0"></i>
+                <span></span>
+              </p>
+            </div>
+
+            <!-- Email -->
+            <div>
+              <label for="email" class="block text-sm font-medium text-brand-dark mb-1.5">Email Address</label>
+              <div class="input-field flex items-center border border-slate-200 rounded-md bg-white h-11 px-3" id="email-wrapper">
+                <i data-lucide="mail" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="nama@email.com"
+                  autocomplete="email"
+                  class="flex-1 bg-transparent text-[16px] text-brand-dark placeholder-slate-400 ml-3 outline-none"
+                  aria-describedby="email-error"
+                >
+              </div>
+              <p id="email-error" class="error-text hidden text-xs text-brand-red mt-1.5 flex items-center gap-1" role="alert">
+                <i data-lucide="alert-circle" class="w-3 h-3 shrink-0"></i>
+                <span></span>
+              </p>
+            </div>
+          </div>
+
+          <!-- WhatsApp -->
+          <div>
+            <label for="whatsapp" class="block text-sm font-medium text-brand-dark mb-1.5">Nomor WhatsApp</label>
+            <div class="input-field flex items-center border border-slate-200 rounded-md bg-white h-11 px-3" id="whatsapp-wrapper">
+              <!-- Indonesia Flag + Code -->
+              <div class="flex items-center gap-1.5 shrink-0 pr-3 border-r border-slate-200">
+                <svg class="w-4 h-3.5" viewBox="0 0 24 16" fill="none">
+                  <rect width="24" height="16" rx="2" fill="#EEEEEE"/>
+                  <rect x="12" y="0" width="12" height="8" fill="#E74C3C" rx="0"/>
+                  <rect x="12" y="8" width="12" height="8" fill="#EEEEEE"/>
+                  <rect x="0" y="0" width="12" height="8" fill="#EEEEEE"/>
+                  <rect x="0" y="8" width="12" height="8" fill="#E74C3C"/>
+                  <circle cx="12" cy="8" r="3.5" fill="#EEEEEE" stroke="#E74C3C" stroke-width="0.5"/>
+                </svg>
+                <span class="text-sm text-slate-600 font-medium">+62</span>
+              </div>
+              <input
+                id="whatsapp"
+                type="tel"
+                placeholder="812-3456-7890"
+                autocomplete="tel"
+                class="flex-1 bg-transparent text-[16px] text-brand-dark placeholder-slate-400 ml-3 outline-none"
+                aria-describedby="whatsapp-error"
+              >
+            </div>
+            <p id="whatsapp-error" class="error-text hidden text-xs text-brand-red mt-1.5 flex items-center gap-1" role="alert">
+              <i data-lucide="alert-circle" class="w-3 h-3 shrink-0"></i>
+              <span></span>
+            </p>
+          </div>
+
+          <!-- Row: Password & Confirm -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Password -->
+            <div>
+              <label for="password" class="block text-sm font-medium text-brand-dark mb-1.5">Password</label>
+              <div class="input-field flex items-center border border-slate-200 rounded-md bg-white h-11 px-3" id="password-wrapper">
+                <i data-lucide="lock" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="Min. 8 karakter"
+                  autocomplete="new-password"
+                  class="flex-1 bg-transparent text-[16px] text-brand-dark placeholder-slate-400 ml-3 outline-none"
+                  aria-describedby="password-error"
+                  oninput="checkStrength(this.value)"
+                >
+                <button type="button" onclick="togglePw('password', 'eye-icon-1')" class="pw-toggle text-slate-400 ml-1 p-0.5" aria-label="Tampilkan password">
+                  <i data-lucide="eye" class="w-4 h-4" id="eye-icon-1"></i>
+                </button>
+              </div>
+              <!-- Strength Indicator -->
+              <div class="flex items-center gap-1.5 mt-2" id="strength-bar">
+                <div class="strength-segment h-1 flex-1 rounded-full bg-slate-100" id="str-1"></div>
+                <div class="strength-segment h-1 flex-1 rounded-full bg-slate-100" id="str-2"></div>
+                <div class="strength-segment h-1 flex-1 rounded-full bg-slate-100" id="str-3"></div>
+                <div class="strength-segment h-1 flex-1 rounded-full bg-slate-100" id="str-4"></div>
+                <span class="text-[10px] text-slate-400 ml-1 font-medium tabular-nums" id="str-label"></span>
+              </div>
+              <p id="password-error" class="error-text hidden text-xs text-brand-red mt-1 flex items-center gap-1" role="alert">
+                <i data-lucide="alert-circle" class="w-3 h-3 shrink-0"></i>
+                <span></span>
+              </p>
+            </div>
+
+            <!-- Confirm Password -->
+            <div>
+              <label for="confirm-password" class="block text-sm font-medium text-brand-dark mb-1.5">Konfirmasi Password</label>
+              <div class="input-field flex items-center border border-slate-200 rounded-md bg-white h-11 px-3" id="confirm-wrapper">
+                <i data-lucide="lock" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <input
+                  id="confirm-password"
+                  type="password"
+                  placeholder="Ulangi password"
+                  autocomplete="new-password"
+                  class="flex-1 bg-transparent text-[16px] text-brand-dark placeholder-slate-400 ml-3 outline-none"
+                  aria-describedby="confirm-error"
+                >
+                <button type="button" onclick="togglePw('confirm-password', 'eye-icon-2')" class="pw-toggle text-slate-400 ml-1 p-0.5" aria-label="Tampilkan password">
+                  <i data-lucide="eye" class="w-4 h-4" id="eye-icon-2"></i>
+                </button>
+              </div>
+              <p id="confirm-error" class="error-text hidden text-xs text-brand-red mt-1.5 flex items-center gap-1" role="alert">
+                <i data-lucide="alert-circle" class="w-3 h-3 shrink-0"></i>
+                <span></span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div>
+            <label for="address" class="block text-sm font-medium text-brand-dark mb-1.5">Alamat Lengkap</label>
+            <div class="input-field border border-slate-200 rounded-md bg-white px-3 pt-2.5 pb-2" id="address-wrapper">
+              <textarea
+                id="address"
+                rows="3"
+                placeholder="Jl. Contoh Alamat No. 88, Kota, Provinsi"
+                class="w-full bg-transparent text-[16px] text-brand-dark placeholder-slate-400 outline-none leading-relaxed resize-y min-h-[72px]"
+                aria-describedby="address-error"
+              ></textarea>
+            </div>
+            <p id="address-error" class="error-text hidden text-xs text-brand-red mt-1.5 flex items-center gap-1" role="alert">
+              <i data-lucide="alert-circle" class="w-3 h-3 shrink-0"></i>
+              <span></span>
+            </p>
+          </div>
+
+          <!-- Terms Checkbox -->
+          <div class="flex items-start gap-2.5">
+            <input type="checkbox" class="custom-checkbox mt-0.5" id="terms">
+            <label for="terms" class="text-sm text-slate-500 leading-relaxed cursor-pointer select-none">
+              Saya setuju dengan <a href="#" class="link-anim font-medium text-brand-red hover:text-brand-red-hover transition-colors">Syarat & Ketentuan</a> serta <a href="#" class="link-anim font-medium text-brand-red hover:text-brand-red-hover transition-colors">Kebijakan Privasi</a> AutoPart Center.
+            </label>
+          </div>
+          <p id="terms-error" class="error-text hidden text-xs text-brand-red -mt-3 flex items-center gap-1" role="alert">
+            <i data-lucide="alert-circle" class="w-3 h-3 shrink-0"></i>
+            <span></span>
+          </p>
+
+          <!-- Submit -->
+          <button
+            type="submit"
+            id="submit-btn"
+            class="w-full h-11 flex items-center justify-center bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-md transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-red mt-2"
+          >
+            <span id="btn-text">Daftar Akun</span>
+            <svg id="btn-spinner" class="spinner hidden w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+          </button>
+        </form>
+
+        <!-- Login Link -->
+        <p class="text-center text-sm text-slate-500 mt-8">
+          Sudah punya akun?
+          <a href="#" class="link-anim font-semibold text-brand-red hover:text-brand-red-hover transition-colors ml-0.5">
+            Login di sini
+          </a>
+        </p>
+
+        <!-- Back (mobile) -->
+        <div class="flex lg:hidden justify-center mt-5">
+          <a href="#" class="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 transition-colors">
+            <i data-lucide="arrow-left" class="w-3 h-3"></i>
+            Kembali ke beranda
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+    });
+
+    // ---- Toggle Password ----
+    function togglePw(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      icon.setAttribute('data-lucide', showing ? 'eye' : 'eye-off');
+      lucide.createIcons();
+    }
+
+    // ---- Password Strength ----
+    function checkStrength(pw) {
+      const segments = [
+        document.getElementById('str-1'),
+        document.getElementById('str-2'),
+        document.getElementById('str-3'),
+        document.getElementById('str-4')
+      ];
+      const label = document.getElementById('str-label');
+      let score = 0;
+
+      if (pw.length >= 8) score++;
+      if (/[A-Z]/.test(pw)) score++;
+      if (/[0-9]/.test(pw)) score++;
+      if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+      const colors = ['bg-slate-100', 'bg-red-300', 'bg-amber-400', 'bg-emerald-400', 'bg-emerald-500'];
+      const labels = ['', 'Lemah', 'Cukup', 'Kuat', 'Sangat Kuat'];
+      const textColors = ['', 'text-red-400', 'text-amber-500', 'text-emerald-500', 'text-emerald-600'];
+
+      segments.forEach((seg, i) => {
+        seg.className = 'strength-segment h-1 flex-1 rounded-full ' + (i < score ? colors[score] : 'bg-slate-100');
+      });
+
+      if (pw.length === 0) {
+        label.textContent = '';
+        label.className = 'text-[10px] text-slate-400 ml-1 font-medium tabular-nums';
+      } else {
+        label.textContent = labels[score];
+        label.className = 'text-[10px] ml-1 font-medium tabular-nums ' + textColors[score];
+      }
+    }
+
+    // ---- Error Helpers ----
+    function clearError(id) {
+      const wrapper = document.getElementById(id + '-wrapper');
+      const errorEl = document.getElementById(id + '-error');
+      if (wrapper) wrapper.classList.remove('input-error');
+      if (errorEl) errorEl.classList.add('hidden');
+    }
+
+    function setError(id, message) {
+      const wrapper = document.getElementById(id + '-wrapper');
+      const errorEl = document.getElementById(id + '-error');
+      if (wrapper) wrapper.classList.add('input-error');
+      if (errorEl) {
+        errorEl.classList.remove('hidden');
+        errorEl.querySelector('span').textContent = message;
+      }
+      lucide.createIcons();
+    }
+
+    // ---- Real-time clear ----
+    ['username', 'email', 'whatsapp', 'password', 'confirm-password', 'address'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', () => clearError(id));
+    });
+    document.getElementById('terms').addEventListener('change', () => clearError('terms'));
+
+    // ---- Handle Register ----
+    function handleRegister(e) {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const wa = document.getElementById('whatsapp').value.trim();
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm-password').value;
+      const address = document.getElementById('address').value.trim();
+      const terms = document.getElementById('terms').checked;
+
+      let valid = true;
+
+      // Username
+      if (!username) {
+        setError('username', 'Username wajib diisi');
+        valid = false;
+      } else if (username.length < 3) {
+        setError('username', 'Minimal 3 karakter');
+        valid = false;
+      } else if (!/^[a-zA-Z0-9._]+$/.test(username)) {
+        setError('username', 'Hanya huruf, angka, titik, dan underscore');
+        valid = false;
+      }
+
+      // Email
+      if (!email) {
+        setError('email', 'Email wajib diisi');
+        valid = false;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setError('email', 'Format email tidak valid');
+        valid = false;
+      }
+
+      // WhatsApp
+      if (!wa) {
+        setError('whatsapp', 'Nomor WhatsApp wajib diisi');
+        valid = false;
+      } else if (!/^[0-9\-+\s()]{8,15}$/.test(wa)) {
+        setError('whatsapp', 'Format nomor tidak valid');
+        valid = false;
+      }
+
+      // Password
+      if (!password) {
+        setError('password', 'Password wajib diisi');
+        valid = false;
+      } else if (password.length < 8) {
+        setError('password', 'Minimal 8 karakter');
+        valid = false;
+      }
+
+      // Confirm
+      if (!confirm) {
+        setError('confirm', 'Konfirmasi password wajib diisi');
+        valid = false;
+      } else if (password !== confirm) {
+        setError('confirm', 'Password tidak cocok');
+        valid = false;
+      }
+
+      // Address
+      if (!address) {
+        setError('address', 'Alamat wajib diisi');
+        valid = false;
+      } else if (address.length < 10) {
+        setError('address', 'Alamat terlalu singkat (min. 10 karakter)');
+        valid = false;
+      }
+
+      // Terms
+      if (!terms) {
+        setError('terms', 'Anda harus menyetujui syarat & ketentuan');
+        valid = false;
+      }
+
+      if (!valid) {
+        // Scroll to first error
+        const firstError = document.querySelector('.input-error');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      // Loading
+      const btn = document.getElementById('submit-btn');
+      const btnText = document.getElementById('btn-text');
+      const btnSpinner = document.getElementById('btn-spinner');
+      btn.classList.add('btn-loading');
+      btnText.textContent = 'Membuat akun...';
+      btnSpinner.classList.remove('hidden');
+
+      setTimeout(() => {
+        btn.classList.remove('btn-loading');
+        btnText.textContent = 'Daftar Akun';
+        btnSpinner.classList.add('hidden');
+
+        showToast('Akun berhasil dibuat! Silakan verifikasi email Anda.', 'success');
+
+        // Reset form
+        document.getElementById('reg-form').reset();
+        checkStrength('');
+      }, 1800);
+    }
+
+    // ---- Toast ----
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      let bg, icon, borderColor;
+      switch (type) {
+        case 'success':
+          bg = 'bg-green-50 border-green-200'; icon = 'check-circle'; borderColor = 'border-l-4 border-l-green-500'; break;
+        case 'error':
+          bg = 'bg-red-50 border-red-200'; icon = 'x-circle'; borderColor = 'border-l-4 border-l-red-500'; break;
+        default:
+          bg = 'bg-slate-50 border-slate-200'; icon = 'info'; borderColor = 'border-l-4 border-l-slate-400';
+      }
+
+      const iconColor = type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : 'text-slate-500';
+      const textColor = type === 'success' ? 'text-green-800' : type === 'error' ? 'text-red-800' : 'text-slate-700';
+
+      toast.className = `toast-enter flex items-start gap-3 px-4 py-3 rounded-md border shadow-sm max-w-sm w-full ${bg} ${borderColor}`;
+      toast.innerHTML = `
+        <i data-lucide="${icon}" class="w-4 h-4 ${iconColor} shrink-0 mt-0.5"></i>
+        <span class="text-sm ${textColor} leading-snug">${message}</span>
+      `;
+
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      setTimeout(() => {
+        toast.classList.remove('toast-enter');
+        toast.classList.add('toast-exit');
+        setTimeout(() => toast.remove(), 250);
+      }, 4000);
+    }
+  </script>
+</body>
+</html>

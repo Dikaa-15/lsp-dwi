@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aki G-Force GF-45Ah — AutoPart Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              red: '#EF4444',
+              'red-hover': '#DC2626',
+              'red-light': '#FEF2F2',
+              'red-thumb': '#F87171',
+              dark: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-feature-settings: "cv11", "ss01"; }
+
+    /* Thumbnail */
+    .thumb {
+      transition: border-color 0.2s ease, opacity 0.2s ease;
+      cursor: pointer;
+      opacity: 0.55;
+    }
+    .thumb:hover { opacity: 0.8; }
+    .thumb.active {
+      border-color: #F87171 !important;
+      opacity: 1;
+    }
+
+    /* Main image zoom */
+    .hero-img-container {
+      overflow: hidden;
+      cursor: zoom-in;
+    }
+    .hero-img-container img {
+      transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .hero-img-container:hover img {
+      transform: scale(1.08);
+    }
+
+    /* Qty buttons */
+    .qty-btn {
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .qty-btn:hover { background-color: #F1F5F9; color: #1E293B; }
+    .qty-btn:active { background-color: #E2E8F0; }
+
+    /* Tab underline */
+    .tab-btn {
+      position: relative;
+      transition: color 0.2s ease;
+    }
+    .tab-btn::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -1px;
+      width: 0;
+      height: 2px;
+      background: #EF4444;
+      transition: width 0.25s ease;
+      border-radius: 1px;
+    }
+    .tab-btn:hover { color: #1E293B; }
+    .tab-btn.active {
+      color: #1E293B;
+      font-weight: 600;
+    }
+    .tab-btn.active::after { width: 100%; }
+
+    /* Spec row */
+    .spec-row { transition: background-color 0.15s ease; }
+    .spec-row:hover { background: #F8FAFC; }
+
+    /* Toast */
+    .toast-enter { animation: toastSlide 0.35s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .toast-exit { animation: toastFade 0.25s ease forwards; }
+    @keyframes toastSlide { from { opacity:0; transform:translateY(-12px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+    @keyframes toastFade { from { opacity:1; } to { opacity:0; transform:translateY(-8px) scale(0.97); } }
+
+    /* Mobile sticky bar */
+    .mobile-bar {
+      transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    .mobile-bar.hidden-bar { transform: translateY(100%); }
+
+    /* Breadcrumb link */
+    .bc-link { transition: color 0.15s ease; }
+    .bc-link:hover { color: #1E293B; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-white font-sans text-brand-dark">
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-4 right-4 z-[200] flex flex-col gap-2 items-end"></div>
+
+  <!-- ====== STICKY HEADER ====== -->
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center">
+      <a href="#" class="flex items-center gap-2 shrink-0">
+        <div class="w-7 h-7 bg-brand-red rounded-md flex items-center justify-center">
+          <i data-lucide="cog" class="w-3.5 h-3.5 text-white"></i>
+        </div>
+        <span class="text-sm font-semibold text-brand-dark tracking-tight hidden sm:block">AutoPart<span class="text-brand-red">Center</span></span>
+      </a>
+      <!-- Breadcrumb -->
+      <nav class="hidden md:flex items-center gap-1.5 ml-8 text-xs">
+        <a href="#" class="bc-link text-slate-400">Beranda</a>
+        <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+        <a href="#" class="bc-link text-slate-400">Kategori</a>
+        <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+        <a href="#" class="bc-link text-slate-400">Kelistrikan</a>
+        <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+        <span class="text-slate-600 font-medium">Aki Mobil</span>
+      </nav>
+      <div class="ml-auto flex items-center gap-2">
+        <div class="hidden sm:flex items-center border border-slate-200 rounded-md bg-slate-50/50 px-3 h-9">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400"></i>
+          <input type="text" placeholder="Cari sparepart..." class="w-32 lg:w-48 bg-transparent text-xs text-brand-dark placeholder-slate-400 ml-2 outline-none">
+        </div>
+        <button class="relative w-9 h-9 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-500">
+          <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+          <span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-brand-red text-white text-[9px] font-bold rounded-full flex items-center justify-center">3</span>
+        </button>
+        <button class="w-9 h-9 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-500">
+          <i data-lucide="user" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ====== MAIN PRODUCT SECTION ====== -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+    <!-- Mobile Breadcrumb -->
+    <nav class="md:hidden flex items-center gap-1.5 mb-6 text-[11px] overflow-x-auto">
+      <a href="#" class="bc-link text-slate-400 whitespace-nowrap">Beranda</a>
+      <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300 shrink-0"></i>
+      <a href="#" class="bc-link text-slate-400 whitespace-nowrap">Kelistrikan</a>
+      <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300 shrink-0"></i>
+      <span class="text-slate-600 font-medium whitespace-nowrap">Aki Mobil</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-2 gap-8 lg:gap-16">
+
+      <!-- ====== LEFT: IMAGES ====== -->
+      <div class="space-y-4">
+        <!-- Hero Image -->
+        <div class="hero-img-container bg-slate-50 rounded-md aspect-square flex items-center justify-center p-8 lg:p-12">
+          <img
+            id="hero-image"
+            src="https://picsum.photos/seed/car-battery-main/800/800.jpg"
+            alt="Aki G-Force GF-45Ah"
+            class="w-full h-full object-contain mix-blend-multiply"
+          >
+        </div>
+
+        <!-- Thumbnail Gallery -->
+        <div class="flex gap-3 overflow-x-auto pb-1" id="thumb-gallery">
+          <button onclick="switchImage(0)" class="thumb active w-20 h-20 sm:w-24 sm:h-24 bg-slate-50 rounded-md border-2 border-transparent flex items-center justify-center p-2 shrink-0">
+            <img src="https://picsum.photos/seed/car-battery-main/200/200.jpg" alt="Tampak depan" class="w-full h-full object-contain mix-blend-multiply">
+          </button>
+          <button onclick="switchImage(1)" class="thumb w-20 h-20 sm:w-24 sm:h-24 bg-slate-50 rounded-md border-2 border-transparent flex items-center justify-center p-2 shrink-0">
+            <img src="https://picsum.photos/seed/car-battery-side/200/200.jpg" alt="Tampak samping" class="w-full h-full object-contain mix-blend-multiply">
+          </button>
+          <button onclick="switchImage(2)" class="thumb w-20 h-20 sm:w-24 sm:h-24 bg-slate-50 rounded-md border-2 border-transparent flex items-center justify-center p-2 shrink-0">
+            <img src="https://picsum.photos/seed/car-battery-top/200/200.jpg" alt="Tampak atas" class="w-full h-full object-contain mix-blend-multiply">
+          </button>
+          <button onclick="switchImage(3)" class="thumb w-20 h-20 sm:w-24 sm:h-24 bg-slate-50 rounded-md border-2 border-transparent flex items-center justify-center p-2 shrink-0">
+            <img src="https://picsum.photos/seed/car-battery-label/200/200.jpg" alt="Label produk" class="w-full h-full object-contain mix-blend-multiply">
+          </button>
+          <button onclick="switchImage(4)" class="thumb w-20 h-20 sm:w-24 sm:h-24 bg-slate-50 rounded-md border-2 border-transparent flex items-center justify-center p-2 shrink-0">
+            <img src="https://picsum.photos/seed/car-battery-box/200/200.jpg" alt="Kemasan" class="w-full h-full object-contain mix-blend-multiply">
+          </button>
+        </div>
+      </div>
+
+      <!-- ====== RIGHT: INFO & ACTIONS ====== -->
+      <div class="flex flex-col">
+        <!-- Category Badge -->
+        <div class="mb-4">
+          <span class="inline-flex items-center text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">
+            Otomotif
+            <i data-lucide="chevron-right" class="w-3 h-3 mx-1 text-slate-300"></i>
+            Aki Mobil
+          </span>
+        </div>
+
+        <!-- Product Name -->
+        <h1 class="text-2xl sm:text-[24px] font-bold text-brand-dark leading-tight tracking-tight">
+          Aki Mobil G-Force GF-45Ah Maintenance Free
+        </h1>
+
+        <!-- Brand -->
+        <p class="mt-2 text-sm text-slate-400">
+          Brand: <span class="font-medium text-slate-500">G-Force</span>
+        </p>
+
+        <!-- Divider -->
+        <div class="h-px bg-slate-100 my-5"></div>
+
+        <!-- Price & Stock -->
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+          <div>
+            <p class="text-[11px] text-slate-400 mb-1">Harga</p>
+            <p class="text-[20px] font-bold text-brand-red leading-none">Rp720.000</p>
+            <p class="text-sm text-slate-400 line-through mt-1">Rp850.000</p>
+          </div>
+          <div class="flex items-center gap-1.5 bg-green-50 px-3 py-1.5 rounded-md self-start">
+            <i data-lucide="check-circle" class="w-3.5 h-3.5 text-green-500"></i>
+            <span class="text-xs font-medium text-green-700">Stok Tersedia: <strong>15 Pcs</strong></span>
+          </div>
+        </div>
+
+        <!-- Discount badge -->
+        <div class="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 bg-brand-red-light rounded-md self-start">
+          <i data-lucide="tag" class="w-3 h-3 text-brand-red"></i>
+          <span class="text-xs font-semibold text-brand-red">Hemat 15% — Promo Terbatas</span>
+        </div>
+
+        <!-- Divider -->
+        <div class="h-px bg-slate-100 my-5"></div>
+
+        <!-- Core Specifications -->
+        <div class="bg-slate-50 rounded-md p-4 space-y-3">
+          <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Spesifikasi Utama</h3>
+          <div class="grid grid-cols-2 gap-x-6 gap-y-2.5">
+            <div class="flex items-start gap-2.5">
+              <i data-lucide="car" class="w-4 h-4 text-slate-400 mt-0.5 shrink-0"></i>
+              <div>
+                <p class="text-[11px] text-slate-400">Tipe Kendaraan</p>
+                <p class="text-sm font-medium text-brand-dark">Mobil</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <i data-lucide="shield-check" class="w-4 h-4 text-slate-400 mt-0.5 shrink-0"></i>
+              <div>
+                <p class="text-[11px] text-slate-400">Garansi</p>
+                <p class="text-sm font-medium text-brand-dark">6 Bulan</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <i data-lucide="package" class="w-4 h-4 text-slate-400 mt-0.5 shrink-0"></i>
+              <div>
+                <p class="text-[11px] text-slate-400">Kondisi</p>
+                <p class="text-sm font-medium text-brand-dark">Baru</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <i data-lucide="zap" class="w-4 h-4 text-slate-400 mt-0.5 shrink-0"></i>
+              <div>
+                <p class="text-[11px] text-slate-400">Kapasitas</p>
+                <p class="text-sm font-medium text-brand-dark">45 Ah</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <i data-lucide="ruler" class="w-4 h-4 text-slate-400 mt-0.5 shrink-0"></i>
+              <div>
+                <p class="text-[11px] text-slate-400">Dimensi</p>
+                <p class="text-sm font-medium text-brand-dark">238 × 175 × 190 mm</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <i data-lucide="weight" class="w-4 h-4 text-slate-400 mt-0.5 shrink-0"></i>
+              <div>
+                <p class="text-[11px] text-slate-400">Berat</p>
+                <p class="text-sm font-medium text-brand-dark">12.5 kg</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="h-px bg-slate-100 my-5"></div>
+
+        <!-- Quantity & Actions -->
+        <div class="space-y-4">
+          <!-- Quantity -->
+          <div>
+            <label class="block text-sm font-medium text-brand-dark mb-2">Jumlah</label>
+            <div class="inline-flex items-center border border-slate-200 rounded-md">
+              <button onclick="changeQty(-1)" class="qty-btn w-10 h-10 flex items-center justify-center text-slate-400 rounded-l-md">
+                <i data-lucide="minus" class="w-4 h-4"></i>
+              </button>
+              <span id="qty-display" class="w-12 h-10 flex items-center justify-center text-sm font-semibold text-brand-dark border-x border-slate-200 tabular-nums">1</span>
+              <button onclick="changeQty(1)" class="qty-btn w-10 h-10 flex items-center justify-center text-slate-400 rounded-r-md">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1.5">Maks. pembelian: 15 pcs</p>
+          </div>
+
+          <!-- Buttons -->
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="addToCart()" class="h-12 flex items-center justify-center gap-2 border-2 border-brand-red text-brand-red text-sm font-semibold rounded-md hover:bg-brand-red-light transition-colors duration-200">
+              <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+              <span class="hidden sm:inline">Tambah ke Keranjang</span>
+              <span class="sm:hidden">Keranjang</span>
+            </button>
+            <button onclick="buyNow()" class="h-12 flex items-center justify-center gap-2 bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-md transition-colors duration-200">
+              <i data-lucide="credit-card" class="w-4 h-4"></i>
+              <span class="hidden sm:inline">Beli Sekarang</span>
+              <span class="sm:hidden">Beli</span>
+            </button>
+          </div>
+
+          <!-- Subtotal preview -->
+          <div class="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-md">
+            <span class="text-sm text-slate-500">Subtotal</span>
+            <span id="subtotal-preview" class="text-sm font-bold text-brand-dark tabular-nums">Rp720.000</span>
+          </div>
+        </div>
+
+        <!-- Trust indicators -->
+        <div class="mt-6 pt-5 border-t border-slate-100 grid grid-cols-3 gap-4">
+          <div class="flex flex-col items-center text-center">
+            <i data-lucide="shield-check" class="w-5 h-5 text-slate-400 mb-1.5"></i>
+            <span class="text-[11px] text-slate-500 font-medium">100% Original</span>
+          </div>
+          <div class="flex flex-col items-center text-center">
+            <i data-lucide="truck" class="w-5 h-5 text-slate-400 mb-1.5"></i>
+            <span class="text-[11px] text-slate-500 font-medium">Gratis Ongkir*</span>
+          </div>
+          <div class="flex flex-col items-center text-center">
+            <i data-lucide="rotate-ccw" class="w-5 h-5 text-slate-400 mb-1.5"></i>
+            <span class="text-[11px] text-slate-500 font-medium">30 Hari Retur</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== BOTTOM: TAB SECTION ====== -->
+    <section class="mt-12 sm:mt-16 border-t border-slate-100 pt-0">
+      <!-- Tab Headers -->
+      <div class="flex gap-6 border-b border-slate-100 overflow-x-auto -mb-px">
+        <button onclick="switchTab('deskripsi')" class="tab-btn active py-4 text-sm text-slate-400 whitespace-nowrap" data-tab="deskripsi">Deskripsi Produk</button>
+        <button onclick="switchTab('spesifikasi')" class="tab-btn py-4 text-sm text-slate-400 whitespace-nowrap" data-tab="spesifikasi">Spesifikasi Lengkap</button>
+        <button onclick="switchTab('pemasangan')" class="tab-btn py-4 text-sm text-slate-400 whitespace-nowrap" data-tab="pemasangan">Cara Pemasangan</button>
+      </div>
+
+      <!-- Tab: Deskripsi -->
+      <div id="panel-deskripsi" class="tab-panel py-8 max-w-3xl">
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">
+          Aki G-Force GF-45Ah adalah aki maintenance free berkualitas tinggi yang dirancang khusus untuk kendaraan roda empat. Menggunakan teknologi calcium-calcium alloy pada pelat positif dan negatif, aki ini menawarkan performa starter yang konsisten bahkan dalam kondisi suhu tinggi.
+        </p>
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">
+          Dengan kapasitas 45Ah dan tegangan 12V, aki ini cocok untuk berbagai jenis mobil kompak dan sedan seperti Toyota Avanza, Honda Jazz, Suzuki Swift, dan Daihatsu Xenia. Konstruksi maintenance free membebaskan Anda dari kebutuhan penambahan air aki secara berkala.
+        </p>
+        <h4 class="text-sm font-semibold text-brand-dark mb-2 mt-6">Keunggulan Produk:</h4>
+        <ul class="space-y-2">
+          <li class="flex items-start gap-2.5 text-sm text-slate-600">
+            <i data-lucide="check" class="w-4 h-4 text-green-500 mt-0.5 shrink-0"></i>
+            Maintenance free — tanpa perlu isi air aki
+          </li>
+          <li class="flex items-start gap-2.5 text-sm text-slate-600">
+            <i data-lucide="check" class="w-4 h-4 text-green-500 mt-0.5 shrink-0"></i>
+            Calcium-calcium technology untuk daya tahan lebih lama
+          </li>
+          <li class="flex items-start gap-2.5 text-sm text-slate-600">
+            <i data-lucide="check" class="w-4 h-4 text-green-500 mt-0.5 shrink-0"></i>
+            Anti-spill design — aman untuk segala posisi pemasangan
+          </li>
+          <li class="flex items-start gap-2.5 text-sm text-slate-600">
+            <i data-lucide="check" class="w-4 h-4 text-green-500 mt-0.5 shrink-0"></i>
+            Garansi resmi 6 bulan dari G-Force Indonesia
+          </li>
+          <li class="flex items-start gap-2.5 text-sm text-slate-600">
+            <i data-lucide="check" class="w-4 h-4 text-green-500 mt-0.5 shrink-0"></i>
+            Tahan terhadap getaran dan suhu tinggi
+          </li>
+        </ul>
+      </div>
+
+      <!-- Tab: Spesifikasi -->
+      <div id="panel-spesifikasi" class="tab-panel hidden py-8 max-w-3xl">
+        <div class="border border-slate-100 rounded-md overflow-hidden">
+          <div class="spec-row flex px-5 py-3.5 border-b border-slate-50">
+            <span class="w-40 shrink-0 text-sm text-slate-400">Kode Produk</span>
+            <span class="text-sm font-medium text-brand-dark">GF-45AH-MF</span>
+          </div>
+          <div class="spec-row flex px-5 py-3.5 border-b border-slate-50 bg-slate-50/50">
+            <span class="w-40 shrink-0 text-sm text-slate-400">Brand</span>
+            <span class="text-sm font-medium text-brand-dark">G-Force</span>
+          </div>
+          <div class="spec-row flex px-5 py-3.5 border-b border-slate-50">
+            <span class="w-40 shrink-0 text-sm text-slate-400">Tipe</span>
+            <span class="text-sm font-medium text-brand-dark">Maintenance Free (MF)</span>
+          </div>
+          <div class="spec-row flex px-5 py-3.5 border-b border-slate-50 bg-slate-50/50">
+            <span class="w-40 shrink-0 text-sm text-slate-400">Tegangan Nominal</span>
+            <span class="text-sm font-medium text-brand-dark">12 Volt</span>
+          </div>
+          <div class="spec-row flex px-5 py-3.5 border-b border-slate-50">
+            <span class="w-40 shrink-0 text-sm text-slate-400">Kapasitas (20hr)</span>
+            <span class="text-sm font-medium text-brand-dark">45 Ah</span>
+          </div>
+          <div class="spec-row flex px-5 py-3.5 border-b border-slate-50 bg-slate-50/50">
+            <span class="w-40 shrink-0 text-sm text-slate-400">Arus Starter (CCA)</span>
+            <span class="text-sm font-medium text-brand-dark">360 CCA</span>
+          </div>
+          <div class="spec-row flex px-5 py-3.5 border-b border-slate-50">
+            <span class="w-40 shrink-0 text-sm text-slate-400">Reservasi Kapasitas (RC)</span>
+            <span class="text-sm font-medium text-brand-dark">65 min</span>
+          </div>
+          <div class="spec-row flex px-5 py-3.5 border-b border-slate-50 bg-slate-50/50">
+            <span class="w-40 shrink-0 text-sm text-slate-400">Panjang × Lebar × Tinggi</span>
+            <span class="text-sm font-medium text-brand-dark">238 × 175 × 190 mm</span>
+          </div>
+          <div class="spec-row flex px-5 py-3.5 border-b border-slate-50">
+            <span class="w-40 shrink-0 text-sm text-slate-400">Berat Bersih</span>
+            <span class="text-sm font-medium text-brand-dark">12.5 kg</span>
+          </div>
+          <div class="spec-row flex px-5 py-3.5 border-b border-slate-50 bg-slate-50/50">
+            <span class="w-40 shrink-0 text-sm text-slate-400">Tipe Terminal</span>
+            <span class="text-sm font-medium text-brand-dark">Type JIS (standard Indonesia)</span>
+          </div>
+          <div class="spec-row flex px-5 py-3.5 border-b border-slate-50">
+            <span class="w-40 shrink-0 text-sm text-slate-400">Teknologi Pelat</span>
+            <span class="text-sm font-medium text-brand-dark">Calcium-Calcium</span>
+          </div>
+          <div class="spec-row flex px-5 py-3.5 border-b border-slate-50 bg-slate-50/50">
+            <span class="w-40 shrink-0 text-sm text-slate-400">Kendaraan Kompatibel</span>
+            <span class="text-sm font-medium text-brand-dark">Avanza, Xenia, Jazz, Swift, Brio, Agya, Ayla</span>
+          </div>
+          <div class="spec-row flex px-5 py-3.5">
+            <span class="w-40 shrink-0 text-sm text-slate-400">Garansi</span>
+            <span class="text-sm font-medium text-brand-dark">6 Bulan (resmi G-Force)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Cara Pemasangan -->
+      <div id="panel-pemasangan" class="tab-panel hidden py-8 max-w-3xl">
+        <div class="mb-6 p-4 bg-amber-50 border border-amber-100 rounded-md flex items-start gap-3">
+          <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500 shrink-0 mt-0.5"></i>
+          <div>
+            <p class="text-sm font-semibold text-amber-800">Perhatian</p>
+            <p class="text-xs text-amber-700 mt-0.5 leading-relaxed">Pemasangan aki melibatkan sistem kelistrikan kendaraan. Jika Anda tidak familiar, disarankan untuk meminta bantuan montir profesional. Pastikan mesin dalam keadaan mati sebelum memulai.</p>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div class="flex gap-4">
+            <div class="w-8 h-8 bg-brand-red-light rounded-full flex items-center justify-center shrink-0">
+              <span class="text-xs font-bold text-brand-red">1</span>
+            </div>
+            <div>
+              <h4 class="text-sm font-semibold text-brand-dark mb-1">Matikan Mesin & Perangkat Elektronik</h4>
+              <p class="text-sm text-slate-500 leading-relaxed">Pastikan mesin kendaraan dalam keadaan mati. Matikan lampu, AC, dan radio untuk menghindari lonjakan arus saat melepas aki lama.</p>
+            </div>
+          </div>
+          <div class="flex gap-4">
+            <div class="w-8 h-8 bg-brand-red-light rounded-full flex items-center justify-center shrink-0">
+              <span class="text-xs font-bold text-brand-red">2</span>
+            </div>
+            <div>
+              <h4 class="text-sm font-semibold text-brand-dark mb-1">Lepas Kabel Negatif (-) Terlebih Dahulu</h4>
+              <p class="text-sm text-slate-500 leading-relaxed">Gunakan kunci 10mm untuk melepas kabel negatif (hitam) dari terminal aki. Selalu lepaskan negatif terlebih dahulu untuk mencegah korsleting.</p>
+            </div>
+          </div>
+          <div class="flex gap-4">
+            <div class="w-8 h-8 bg-brand-red-light rounded-full flex items-center justify-center shrink-0">
+              <span class="text-xs font-bold text-brand-red">3</span>
+            </div>
+            <div>
+              <h4 class="text-sm font-semibold text-brand-dark mb-1">Lepas Kabel Positif (+)</h4>
+              <p class="text-sm text-slate-500 leading-relaxed">Setelah kabel negatif terlepas, lepaskan kabel positif (merah) dari terminal aki lama dengan cara yang sama.</p>
+            </div>
+          </div>
+          <div class="flex gap-4">
+            <div class="w-8 h-8 bg-brand-red-light rounded-full flex items-center justify-center shrink-0">
+              <span class="text-xs font-bold text-brand-red">4</span>
+            </div>
+            <div>
+              <h4 class="text-sm font-semibold text-brand-dark mb-1">Angkat Aki Lama & Bersihkan Bracket</h4>
+              <p class="text-sm text-slate-500 leading-relaxed">Lepaskan baut pengikat aki (hold-down clamp). Angkat aki lama dengan hati-hati karena beratnya mencapai 12.5kg. Bersihkan area bracket dari karat atau kotoran.</p>
+            </div>
+          </div>
+          <div class="flex gap-4">
+            <div class="w-8 h-8 bg-brand-red-light rounded-full flex items-center justify-center shrink-0">
+              <span class="text-xs font-bold text-brand-red">5</span>
+            </div>
+            <div>
+              <h4 class="text-sm font-semibold text-brand-dark mb-1">Pasang Aki Baru & Sambung Kabel</h4>
+              <p class="text-sm text-slate-500 leading-relaxed">Letakkan aki baru di bracket, pastikan posisi terminal sesuai (positif di sisi kanan). Kencangkan hold-down clamp. <strong>Pasang kabel positif (+) terlebih dahulu</strong>, lalu kabel negatif (-). Kencangkan dengan torsi yang cukup.</p>
+            </div>
+          </div>
+          <div class="flex gap-4">
+            <div class="w-8 h-8 bg-brand-red-light rounded-full flex items-center justify-center shrink-0">
+              <span class="text-xs font-bold text-brand-red">6</span>
+            </div>
+            <div>
+              <h4 class="text-sm font-semibold text-brand-dark mb-1">Tes & Verifikasi</h4>
+              <p class="text-sm text-slate-500 leading-relaxed">Nyalakan mesin dan periksa apakah starter berfungsi normal. Periksa lampu indikator dashboard. Pastikan tidak ada kode error yang muncul (beberapa kendaraan modern perlu reset ECU setelah ganti aki).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== RELATED PRODUCTS ====== -->
+    <section class="mt-12 sm:mt-16 pb-8 sm:pb-12">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-bold text-brand-dark tracking-tight">Produk Serupa</h2>
+        <a href="#" class="text-xs font-medium text-brand-red hover:text-brand-red-hover transition-colors">Lihat Semua →</a>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <a href="#" class="group bg-white rounded-md border border-slate-100 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+          <div class="aspect-square bg-slate-50 p-4">
+            <img src="https://picsum.photos/seed/aki-gs-astra/300/300.jpg" alt="Aki GS Astra" class="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <div class="p-3">
+            <p class="text-[11px] text-slate-400 mb-0.5">GS Astra</p>
+            <p class="text-xs font-medium text-brand-dark line-clamp-2 leading-snug min-h-[2rem]">Aki GS Astra 45Ah MF</p>
+            <p class="text-sm font-bold text-brand-red mt-1.5">Rp685.000</p>
+          </div>
+        </a>
+        <a href="#" class="group bg-white rounded-md border border-slate-100 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+          <div class="aspect-square bg-slate-50 p-4">
+            <img src="https://picsum.photos/seed/aki-bosch-s4/300/300.jpg" alt="Aki Bosch" class="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <div class="p-3">
+            <p class="text-[11px] text-slate-400 mb-0.5">Bosch</p>
+            <p class="text-xs font-medium text-brand-dark line-clamp-2 leading-snug min-h-[2rem]">Aki Bosch S4 45Ah</p>
+            <p class="text-sm font-bold text-brand-red mt-1.5">Rp890.000</p>
+          </div>
+        </a>
+        <a href="#" class="group bg-white rounded-md border border-slate-100 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 hidden sm:block">
+          <div class="aspect-square bg-slate-50 p-4">
+            <img src="https://picsum.photos/seed/aki-yuasa-maintenance/300/300.jpg" alt="Aki Yuasa" class="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <div class="p-3">
+            <p class="text-[11px] text-slate-400 mb-0.5">Yuasa</p>
+            <p class="text-xs font-medium text-brand-dark line-clamp-2 leading-snug min-h-[2rem]">Aki Yuasa 50Ah MF</p>
+            <p class="text-sm font-bold text-brand-red mt-1.5">Rp750.000</p>
+          </div>
+        </a>
+        <a href="#" class="group bg-white rounded-md border border-slate-100 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 hidden sm:block">
+          <div class="aspect-square bg-slate-50 p-4">
+            <img src="https://picsum.photos/seed/aki-mutual-calcium/300/300.jpg" alt="Aki Mutual" class="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <div class="p-3">
+            <p class="text-[11px] text-slate-400 mb-0.5">Mutual Power</p>
+            <p class="text-xs font-medium text-brand-dark line-clamp-2 leading-snug min-h-[2rem]">Aki Mutual 45Ah Calcium</p>
+            <p class="text-sm font-bold text-brand-red mt-1.5">Rp620.000</p>
+          </div>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- ====== MOBILE STICKY BAR ====== -->
+  <div class="mobile-bar lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-100 px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+    <div class="flex items-center gap-3">
+      <div class="flex-1 min-w-0">
+        <p class="text-xs text-slate-400 truncate">Aki G-Force GF-45Ah</p>
+        <p class="text-sm font-bold text-brand-red">Rp720.000</p>
+      </div>
+      <button onclick="addToCart()" class="h-10 px-4 flex items-center justify-center border-2 border-brand-red text-brand-red text-xs font-semibold rounded-md shrink-0">
+        <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+      </button>
+      <button onclick="buyNow()" class="h-10 px-5 flex items-center justify-center bg-brand-red text-white text-xs font-semibold rounded-md shrink-0">
+        Beli Sekarang
+      </button>
+    </div>
+  </div>
+
+  <!-- ====== FOOTER (simplified) ====== -->
+  <footer class="bg-slate-50 border-t border-slate-100 pb-20 lg:pb-0">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 bg-brand-red rounded-md flex items-center justify-center">
+          <i data-lucide="cog" class="w-3 h-3 text-white"></i>
+        </div>
+        <span class="text-xs font-semibold text-slate-500">AutoPart<span class="text-brand-red">Center</span></span>
+      </div>
+      <p class="text-xs text-slate-400">&copy; 2025 AutoPart Center. All rights reserved.</p>
+      <div class="flex items-center gap-4 text-xs text-slate-400">
+        <a href="#" class="hover:text-slate-600 transition-colors">Syarat & Ketentuan</a>
+        <a href="#" class="hover:text-slate-600 transition-colors">Kontak</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ---- Image Data ----
+    const images = [
+      'https://picsum.photos/seed/car-battery-main/800/800.jpg',
+      'https://picsum.photos/seed/car-battery-side/800/800.jpg',
+      'https://picsum.photos/seed/car-battery-top/800/800.jpg',
+      'https://picsum.photos/seed/car-battery-label/800/800.jpg',
+      'https://picsum.photos/seed/car-battery-box/800/800.jpg'
+    ];
+    let activeThumb = 0;
+    const PRICE = 720000;
+    const MAX_QTY = 15;
+    let qty = 1;
+
+    // ---- Switch Hero Image ----
+    function switchImage(index) {
+      activeThumb = index;
+      const hero = document.getElementById('hero-image');
+      hero.style.opacity = '0';
+      setTimeout(() => {
+        hero.src = images[index];
+        hero.style.opacity = '1';
+      }, 150);
+      hero.style.transition = 'opacity 0.15s ease';
+
+      document.querySelectorAll('.thumb').forEach((t, i) => {
+        t.classList.toggle('active', i === index);
+      });
+    }
+
+    // ---- Quantity ----
+    function changeQty(delta) {
+      const newQty = qty + delta;
+      if (newQty < 1 || newQty > MAX_QTY) return;
+      qty = newQty;
+      document.getElementById('qty-display').textContent = qty;
+      document.getElementById('subtotal-preview').textContent = fmt(PRICE * qty);
+    }
+
+    function fmt(n) {
+      return 'Rp' + n.toLocaleString('id-ID');
+    }
+
+    // ---- Actions ----
+    function addToCart() {
+      showToast(`${qty}x Aki G-Force GF-45Ah ditambahkan ke keranjang`, 'success');
+    }
+
+    function buyNow() {
+      showToast('Mengalihkan ke halaman checkout...', 'info');
+    }
+
+    // ---- Tabs ----
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('panel-' + tab).classList.remove('hidden');
+      document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+    }
+
+    // ---- Toast ----
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      let bg, icon, bc;
+      switch (type) {
+        case 'success': bg = 'bg-green-50 border-green-200'; icon = 'check-circle'; bc = 'border-l-4 border-l-green-500'; break;
+        case 'error': bg = 'bg-red-50 border-red-200'; icon = 'x-circle'; bc = 'border-l-4 border-l-red-500'; break;
+        default: bg = 'bg-slate-50 border-slate-200'; icon = 'info'; bc = 'border-l-4 border-l-slate-400';
+      }
+      const ic = type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : 'text-slate-500';
+      const tc = type === 'success' ? 'text-green-800' : type === 'error' ? 'text-red-800' : 'text-slate-700';
+      toast.className = `toast-enter flex items-start gap-3 px-4 py-3 rounded-md border shadow-sm max-w-sm w-full ${bg} ${bc}`;
+      toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 ${ic} shrink-0 mt-0.5"></i><span class="text-sm ${tc} leading-snug">${message}</span>`;
+      container.appendChild(toast);
+      lucide.createIcons();
+      setTimeout(() => {
+        toast.classList.remove('toast-enter');
+        toast.classList.add('toast-exit');
+        setTimeout(() => toast.remove(), 250);
+      }, 3000);
+    }
+
+    // ---- Init ----
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

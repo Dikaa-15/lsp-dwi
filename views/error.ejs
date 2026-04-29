@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= message || 'Terjadi Kesalahan' %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              red: '#EF4444',
+              'red-hover': '#DC2626',
+              dark: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-feature-settings: "cv11", "ss01"; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 font-sans text-slate-900 flex items-center justify-center px-4 py-10">
+  <div class="w-full max-w-lg bg-white rounded-2xl border border-slate-200 shadow-sm p-8 sm:p-10 text-center">
+    <div class="w-16 h-16 mx-auto mb-6 rounded-full bg-red-50 flex items-center justify-center">
+      <i data-lucide="alert-triangle" class="w-8 h-8 text-red-500"></i>
+    </div>
+
+    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Error <%= error.status || 500 %></p>
+    <h1 class="text-2xl font-bold text-slate-900 mb-3"><%= message || 'Terjadi kesalahan' %></h1>
+    <p class="text-sm text-slate-500 leading-relaxed mb-8">
+      Halaman tidak dapat ditampilkan saat ini. Gunakan tombol kembali untuk kembali ke halaman sebelumnya, atau kembali ke beranda jika Anda membuka halaman ini langsung.
+    </p>
+
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <%- include('partials/back-button', { fallback: '/', wrapperClass: 'flex justify-center' }) %>
+      <a href="/" class="inline-flex items-center justify-center gap-1.5 text-sm font-semibold bg-brand-red text-white px-5 py-2.5 rounded-full hover:bg-brand-red-hover transition-colors">
+        <i data-lucide="home" class="w-4 h-4"></i>
+        Beranda
+      </a>
+    </div>
+
+    <% if (error && error.stack) { %>
+      <pre class="mt-8 text-left text-[11px] leading-relaxed text-slate-400 bg-slate-50 border border-slate-200 rounded-lg p-4 overflow-auto"><%= error.stack %></pre>
+    <% } %>
+  </div>
+
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>

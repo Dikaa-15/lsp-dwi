@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              red: '#F87171',
+              'red-hover': '#EF4444',
+              'red-light': '#FEF2F2',
+              dark: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-feature-settings: "cv11", "ss01"; }
+    .input-field { transition: box-shadow 0.2s ease, border-color 0.2s ease; }
+    .input-field:focus-within { box-shadow: 0 0 0 2px rgba(248,113,113,0.25); border-color: #F87171; }
+    .login-image { filter: saturate(0.2) brightness(0.9); transition: filter 0.6s ease; }
+    .login-image:hover { filter: saturate(0.35) brightness(0.93); }
+    .link-anim { position: relative; }
+    .link-anim::after { content: ''; position: absolute; left: 0; bottom: -1px; width: 0; height: 1px; background: #F87171; transition: width 0.25s ease; }
+    .link-anim:hover::after { width: 100%; }
+    textarea { resize: vertical; }
+  </style>
+</head>
+<body class="bg-white font-sans text-brand-dark min-h-screen">
+
+  <div class="min-h-screen flex">
+    <!-- ====== LEFT: Image Panel ====== -->
+    <div class="hidden lg:flex lg:w-[45%] xl:w-[48%] bg-slate-50 relative overflow-hidden">
+      <img
+        src="https://picsum.photos/seed/auto-garage-tools-neat/1200/1600.jpg"
+        alt="Automotive workshop"
+        class="login-image absolute inset-0 w-full h-full object-cover"
+      >
+    </div>
+
+    <!-- ====== RIGHT: Registration Form ====== -->
+    <div class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-10 xl:px-16 py-8">
+      <div class="w-full max-w-[440px]">
+
+        <!-- Logo -->
+        <div class="flex lg:hidden items-center gap-2 mb-8">
+          <div class="w-8 h-8 bg-brand-red rounded-md flex items-center justify-center">
+            <i data-lucide="cog" class="w-4 h-4 text-white"></i>
+          </div>
+          <span class="text-lg font-semibold text-brand-dark tracking-tight">AutoPart<span class="text-brand-red">Center</span></span>
+        </div>
+
+        <div class="mb-8">
+          <h1 class="text-2xl font-bold text-brand-dark tracking-tight leading-tight">Buat Akun Baru</h1>
+          <p class="mt-2 text-sm text-slate-500 leading-relaxed">Mulai belanja sparepart original dengan harga terbaik.</p>
+        </div>
+
+        <% if (messages.error) { %>
+            <div class="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-md flex items-center gap-3">
+                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                <span><%= messages.error %></span>
+            </div>
+        <% } %>
+
+        <form action="/auth/register" method="POST" class="space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="username" class="block text-sm font-medium text-brand-dark mb-1.5">Username</label>
+              <div class="input-field flex items-center border border-slate-200 rounded-md bg-white h-11 px-3">
+                <i data-lucide="user" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <input name="username" id="username" type="text" placeholder="username_anda" class="flex-1 bg-transparent text-sm text-brand-dark placeholder-slate-400 ml-3 outline-none" required>
+              </div>
+            </div>
+            <div>
+              <label for="email" class="block text-sm font-medium text-brand-dark mb-1.5">Email</label>
+              <div class="input-field flex items-center border border-slate-200 rounded-md bg-white h-11 px-3">
+                <i data-lucide="mail" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <input name="email" id="email" type="email" placeholder="nama@email.com" class="flex-1 bg-transparent text-sm text-brand-dark placeholder-slate-400 ml-3 outline-none" required>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label for="whatsapp" class="block text-sm font-medium text-brand-dark mb-1.5">Nomor WhatsApp</label>
+            <div class="input-field flex items-center border border-slate-200 rounded-md bg-white h-11 px-3">
+              <i data-lucide="phone" class="w-4 h-4 text-slate-400 shrink-0"></i>
+              <input name="whatsapp" id="whatsapp" type="tel" placeholder="081234567890" class="flex-1 bg-transparent text-sm text-brand-dark placeholder-slate-400 ml-3 outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label for="password" class="block text-sm font-medium text-brand-dark mb-1.5">Password</label>
+            <div class="input-field flex items-center border border-slate-200 rounded-md bg-white h-11 px-3">
+              <i data-lucide="lock" class="w-4 h-4 text-slate-400 shrink-0"></i>
+              <input name="password" id="password" type="password" placeholder="Min. 8 karakter" class="flex-1 bg-transparent text-sm text-brand-dark placeholder-slate-400 ml-3 outline-none" required minlength="8">
+            </div>
+          </div>
+
+          <div>
+            <label for="alamat_lengkap" class="block text-sm font-medium text-brand-dark mb-1.5">Alamat Lengkap</label>
+            <div class="input-field border border-slate-200 rounded-md bg-white px-3 pt-2.5 pb-2">
+              <textarea name="alamat_lengkap" id="alamat_lengkap" rows="3" placeholder="Jl. Contoh Alamat No. 88, Kota" class="w-full bg-transparent text-sm text-brand-dark placeholder-slate-400 outline-none leading-relaxed min-h-[72px]"></textarea>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full h-11 flex items-center justify-center bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-md transition-colors duration-200 mt-2">
+            Daftar Akun
+          </button>
+        </form>
+
+        <p class="text-center text-sm text-slate-500 mt-8">
+          Sudah punya akun?
+          <a href="/auth/login" class="link-anim font-semibold text-brand-red hover:text-brand-red-hover transition-colors ml-0.5">Login di sini</a>
+        </p>
+
+        <div class="flex justify-center mt-5">
+          <a href="javascript:history.back()" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-brand-red transition-colors border border-slate-200 px-4 py-2 rounded-full hover:border-brand-red">
+            <i data-lucide="arrow-left" class="w-3 h-3"></i>
+            Kembali
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>

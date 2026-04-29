@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verifikasi Pesanan — AutoPart Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              red: '#EF4444',
+              'red-hover': '#DC2626',
+              'red-light': '#FEF2F2',
+              dark: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-feature-settings: "cv11", "ss01"; }
+
+    .nav-link { transition: all 0.15s ease; }
+    .nav-link:hover { background: rgba(255,255,255,0.06); color: #F1F5F9; }
+    .nav-link.active { background: rgba(239,68,68,0.12); color: #F87171; }
+    .nav-link.active .nav-icon { color: #F87171; }
+
+    .tbl-row { transition: background-color 0.1s ease; }
+    .tbl-row:hover { background: #F8FAFC; }
+    .tbl-row.row-active { background: #FEF2F2; border-left: 3px solid #EF4444; }
+
+    /* Status badges */
+    .badge-menunggu { background: #FEF2F2; color: #DC2626; }
+    .badge-diproses { background: #EFF6FF; color: #2563EB; }
+    .badge-dikirim { background: #F0FDF4; color: #16A34A; }
+    .badge-selesai { background: #DCFCE7; color: #15803D; }
+    .badge-dibatalkan { background: #FEF2F2; color: #991B1B; }
+
+    /* Pulse for pending */
+    .pulse-dot { position: relative; }
+    .pulse-dot::before {
+      content: ''; position: absolute; inset: -2px; border-radius: 50%;
+      background: #EF4444; opacity: 0.4;
+      animation: pulseDot 2s ease-in-out infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 0.4; }
+      50% { transform: scale(1.8); opacity: 0; }
+    }
+
+    /* Detail panel */
+    .detail-panel { transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16,1,0.3,1); }
+    .detail-hidden { opacity: 0; transform: translateX(16px); pointer-events: none; }
+    .detail-visible { opacity: 1; transform: translateX(0); pointer-events: auto; }
+
+    /* Image zoom */
+    .proof-img { cursor: zoom-in; transition: transform 0.3s ease; }
+    .proof-img:hover { transform: scale(1.03); }
+
+    /* Lightbox */
+    .lightbox { transition: opacity 0.2s ease; }
+    .lightbox-img { transition: transform 0.3s cubic-bezier(0.16,1,0.3,1); }
+
+    /* Toast */
+    .toast-enter { animation: toastSlide 0.35s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .toast-exit { animation: toastFade 0.25s ease forwards; }
+    @keyframes toastSlide { from { opacity:0; transform:translateX(16px) scale(0.97); } to { opacity:1; transform:translateX(0) scale(1); } }
+    @keyframes toastFade { from { opacity:1; } to { opacity:0; transform:translateX(8px) scale(0.97); } }
+
+    /* Action button */
+    .act-btn { transition: all 0.15s ease; }
+
+    /* Sidebar */
+    .sidebar-overlay { transition: opacity 0.25s ease; }
+    .sidebar-panel { transition: transform 0.3s cubic-bezier(0.16,1,0.3,1); }
+
+    /* Select */
+    .form-select { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+    .form-select:focus { border-color: #EF4444; box-shadow: 0 0 0 2px rgba(239,68,68,0.12); outline: none; }
+
+    .input-field { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+    .input-field:focus { border-color: #EF4444; box-shadow: 0 0 0 2px rgba(239,68,68,0.12); outline: none; }
+
+    /* Row exit */
+    .row-exit { animation: rowSlide 0.3s ease forwards; }
+    @keyframes rowSlide { to { opacity: 0; height: 0; padding: 0; overflow: hidden; } }
+
+    /* Tab count animation */
+    .tab-count { font-variant-numeric: tabular-nums; }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 3px; }
+    .dark-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body class="bg-slate-50 font-sans text-brand-dark min-h-screen">
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-4 right-4 z-[200] flex flex-col gap-2 items-end"></div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox fixed inset-0 z-[180] hidden bg-black/80 flex items-center justify-center p-4" onclick="closeLightbox()">
+    <img id="lightbox-img" src="" alt="Bukti Transfer" class="lightbox-img max-w-full max-h-[90vh] rounded-lg shadow-2xl object-contain">
+    <button class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  <!-- Mobile Overlay -->
+  <div id="sidebar-overlay" class="sidebar-overlay fixed inset-0 bg-black/40 z-[90] hidden opacity-0 lg:hidden" onclick="closeSidebar()"></div>
+
+  <div class="flex min-h-screen">
+
+    <!-- ====== SIDEBAR ====== -->
+    <aside id="sidebar" class="sidebar-panel fixed lg:sticky top-0 left-0 z-[100] w-56 h-screen bg-brand-dark flex flex-col -translate-x-full lg:translate-x-0 dark-scroll overflow-y-auto">
+      <div class="flex items-center gap-2.5 px-5 h-14 border-b border-white/[0.06] shrink-0">
+        <div class="w-7 h-7 bg-brand-red rounded-lg flex items-center justify-center">
+          <i data-lucide="cog" class="w-3.5 h-3.5 text-white"></i>
+        </div>
+        <div>
+          <span class="text-sm font-semibold text-white tracking-tight block leading-none">AutoPart</span>
+          <span class="text-[9px] text-slate-500 font-medium tracking-wider uppercase">Admin</span>
+        </div>
+        <button onclick="closeSidebar()" class="lg:hidden ml-auto w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <nav class="flex-1 py-4 px-3">
+        <p class="px-2.5 mb-2 text-[9px] font-semibold text-slate-600 uppercase tracking-widest">Menu</p>
+        <a href="#" class="nav-link flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-slate-400 mb-0.5">
+          <i data-lucide="layout-dashboard" class="w-[18px] h-[18px] nav-icon text-slate-500 shrink-0"></i> Dashboard
+        </a>
+        <a href="#" class="nav-link flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-slate-400 mb-0.5">
+          <i data-lucide="package" class="w-[18px] h-[18px] nav-icon text-slate-500 shrink-0"></i> Manajemen Produk
+        </a>
+        <a href="#" class="nav-link flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-slate-400 mb-0.5">
+          <i data-lucide="tags" class="w-[18px] h-[18px] nav-icon text-slate-500 shrink-0"></i> Kategori & Brand
+        </a>
+        <button class="nav-link active w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-slate-400 mb-0.5" data-nav="verifikasi">
+          <i data-lucide="clipboard-check" class="w-[18px] h-[18px] nav-icon text-slate-500 shrink-0"></i> Verifikasi Pesanan
+          <span id="sidebar-badge" class="ml-auto w-5 h-5 bg-brand-red text-white text-[10px] font-bold rounded-full flex items-center justify-center tab-count">5</span>
+        </button>
+        <a href="#" class="nav-link flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-slate-400 mb-0.5">
+          <i data-lucide="bar-chart-3" class="w-[18px] h-[18px] nav-icon text-slate-500 shrink-0"></i> Laporan Penjualan
+        </a>
+        <p class="px-2.5 mt-6 mb-2 text-[9px] font-semibold text-slate-600 uppercase tracking-widest">Sistem</p>
+        <a href="#" class="nav-link flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-slate-400 mb-0.5">
+          <i data-lucide="settings" class="w-[18px] h-[18px] nav-icon text-slate-500 shrink-0"></i> Pengaturan
+        </a>
+        <a href="#" class="nav-link flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-slate-500 hover:text-red-400">
+          <i data-lucide="log-out" class="w-[18px] h-[18px] shrink-0"></i> Logout
+        </a>
+      </nav>
+      <div class="px-5 py-3 border-t border-white/[0.06] shrink-0">
+        <p class="text-[9px] text-slate-700 text-center">AutoPart Center v1.0</p>
+      </div>
+    </aside>
+
+    <!-- ====== MAIN ====== -->
+    <div class="flex-1 min-w-0 flex flex-col">
+
+      <!-- Top Bar -->
+      <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 h-14 flex items-center px-4 sm:px-6 shrink-0">
+        <button onclick="openSidebar()" class="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-50 text-slate-500 mr-3">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+        <div class="flex items-center gap-2">
+          <i data-lucide="clipboard-check" class="w-4 h-4 text-slate-400"></i>
+          <h2 class="text-sm font-semibold text-brand-dark">Verifikasi Pesanan</h2>
+        </div>
+        <span id="header-badge" class="ml-3 px-2 py-0.5 bg-brand-red-light text-brand-red text-[10px] font-semibold rounded-md tab-count">5 menunggu</span>
+      </header>
+
+      <!-- Content -->
+      <div class="flex-1 flex overflow-hidden">
+
+        <!-- ====== LEFT: ORDER LIST ====== -->
+        <div id="list-panel" class="flex-1 min-w-0 flex flex-col overflow-hidden">
+
+          <!-- Filters -->
+          <div class="p-4 sm:p-6 pb-0">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+              <div class="flex items-center gap-2 overflow-x-auto pb-1">
+                <button onclick="filterStatus('all')" class="status-tab active px-3 py-1.5 text-[11px] font-semibold rounded-md bg-slate-900 text-white transition-colors whitespace-nowrap" data-st="all">Semua</button>
+                <button onclick="filterStatus('menunggu_verifikasi')" class="status-tab px-3 py-1.5 text-[11px] font-semibold rounded-md bg-white text-slate-500 border border-slate-200 hover:border-slate-300 transition-colors whitespace-nowrap" data-st="menunggu_verifikasi">
+                  Menunggu <span class="ml-1 tab-count" id="tab-menunggu">5</span>
+                </button>
+                <button onclick="filterStatus('diproses')" class="status-tab px-3 py-1.5 text-[11px] font-semibold rounded-md bg-white text-slate-500 border border-slate-200 hover:border-slate-300 transition-colors whitespace-nowrap" data-st="diproses">
+                  Diproses <span class="ml-1 tab-count" id="tab-diproses">3</span>
+                </button>
+                <button onclick="filterStatus('dikirim')" class="status-tab px-3 py-1.5 text-[11px] font-semibold rounded-md bg-white text-slate-500 border border-slate-200 hover:border-slate-300 transition-colors whitespace-nowrap" data-st="dikirim">
+                  Dikirim <span class="ml-1 tab-count" id="tab-dikirim">2</span>
+                </button>
+                <button onclick="filterStatus('selesai')" class="status-tab px-3 py-1.5 text-[11px] font-semibold rounded-md bg-white text-slate-500 border border-slate-200 hover:border-slate-300 transition-colors whitespace-nowrap" data-st="selesai">
+                  Selesai <span class="ml-1 tab-count" id="tab-selesai">4</span>
+                </button>
+                <button onclick="filterStatus('dibatalkan')" class="status-tab px-3 py-1.5 text-[11px] font-semibold rounded-md bg-white text-slate-500 border border-slate-200 hover:border-slate-300 transition-colors whitespace-nowrap" data-st="dibatalkan">
+                  Dibatalkan
+                </button>
+              </div>
+              <div class="input-field flex items-center border border-slate-200 rounded-md h-9 px-3 w-full sm:w-56 shrink-0">
+                <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                <input id="search-input" type="text" placeholder="Cari ID / Nama..." class="flex-1 bg-transparent text-[13px] text-brand-dark placeholder-slate-400 ml-2 outline-none" oninput="renderOrders()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="flex-1 overflow-y-auto px-4 sm:px-6 pb-6">
+            <div class="bg-white rounded-md border border-slate-200 overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                  <thead>
+                    <tr class="border-b border-slate-100 bg-slate-50/50">
+                      <th class="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">ID Pesanan</th>
+                      <th class="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Customer</th>
+                      <th class="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden sm:table-cell">Tanggal</th>
+                      <th class="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right">Total</th>
+                      <th class="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                      <th class="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="orders-tbody"></tbody>
+                </table>
+              </div>
+              <div id="table-empty" class="hidden px-4 py-16 text-center">
+                <i data-lucide="inbox" class="w-10 h-10 text-slate-200 mx-auto mb-3"></i>
+                <p class="text-sm text-slate-500 font-medium">Tidak ada pesanan</p>
+                <p class="text-xs text-slate-400 mt-1">Coba ubah filter pencarian.</p>
+              </div>
+            </div>
+            <p id="showing-text" class="text-[11px] text-slate-400 mt-3 px-1"></p>
+          </div>
+        </div>
+
+        <!-- ====== RIGHT: DETAIL PANEL ====== -->
+        <div id="detail-panel" class="detail-panel detail-hidden w-full lg:w-[520px] xl:w-[560px] border-l border-slate-200 bg-white flex flex-col overflow-hidden shrink-0 absolute lg:relative inset-y-0 right-0 z-[60] lg:z-auto">
+
+          <!-- Detail Header -->
+          <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-semibold text-brand-dark">Detail Pesanan</h3>
+              <span id="detail-status-badge"></span>
+            </div>
+            <button onclick="closeDetail()" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-400">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- Detail Body -->
+          <div id="detail-body" class="flex-1 overflow-y-auto"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== DATA ====================
+    const orders = [
+      { id: 'TRX-20250615-008', customer: 'Ahmad Rizky', wa: '0812-3456-7890', alamat: 'Jl. Otomotif Raya No. 88, RT 05/RW 03, Kel. Cilandak Timur, Kec. Pasar Minggu, Jakarta Selatan 12560', tanggal: '2025-06-15 14:23', status: 'menunggu_verifikasi', total: 1785000, items: [{nama:'Brake Pad Set Depan - Bendix',qty:2,harga:485000},{nama:'Busi NGK Iridium - Honda Vario',qty:1,harga:95000},{nama:'Aki Mobil G-Force GF-45Ah',qty:1,harga:720000}], bukti: 'https://picsum.photos/seed/bukti-transfer-1/800/1200.jpg' },
+      { id: 'TRX-20250615-009', customer: 'Budi Santoso', wa: '0878-1234-5678', alamat: 'Jl. Merdeka No. 12, Kel. Braga, Kec. Sumur Bandung, Kota Bandung 40111', tanggal: '2025-06-15 13:10', status: 'menunggu_verifikasi', total: 485000, items: [{nama:'Brake Pad Set Depan - Bendix',qty:1,harga:485000}], bukti: 'https://picsum.photos/seed/bukti-transfer-2/800/1200.jpg' },
+      { id: 'TRX-20250615-010', customer: 'Dewi Lestari', wa: '0856-7890-1234', alamat: 'Jl. Sudirman Kav. 52-53, Kel. Senayan, Kec. Kebayoran Baru, Jakarta Selatan 12190', tanggal: '2025-06-15 11:45', status: 'menunggu_verifikasi', total: 1250000, items: [{nama:'Oil Filter Denso - Toyota Avanza',qty:3,harga:65000},{nama:'Aki Mobil G-Force GF-45Ah',qty:1,harga:720000},{nama:'Disc Brake Depan - Honda Beat',qty:2,harga:185000}], bukti: 'https://picsum.photos/seed/bukti-transfer-3/800/1200.jpg' },
+      { id: 'TRX-20250615-011', customer: 'Eko Prasetyo', wa: '0813-4567-8901', alamat: 'Jl. Malioboro No. 5, Kel. Sosromenduran, Kec. Gedongtengen, Yogyakarta 55271', tanggal: '2025-06-15 10:02', status: 'menunggu_verifikasi', total: 320000, items: [{nama:'Busi NGK Iridium - Honda Vario',qty:2,harga:95000},{nama:'Disc Brake Depan - Honda Beat',qty:1,harga:185000}], bukti: 'https://picsum.photos/seed/bukti-transfer-4/800/1200.jpg' },
+      { id: 'TRX-20250615-012', customer: 'Fitri Handayani', wa: '0821-5678-9012', alamat: 'Jl. Ahmad Yani No. 100, Kel. Pandean Lamper, Kec. Gayamsari, Semarang 50134', tanggal: '2025-06-15 09:15', status: 'menunggu_verifikasi', total: 65000, items: [{nama:'Oil Filter Denso - Toyota Avanza',qty:1,harga:65000}], bukti: 'https://picsum.photos/seed/bukti-transfer-5/800/1200.jpg' },
+      { id: 'TRX-20250614-003', customer: 'Gilang Ramadhan', wa: '0857-8901-2345', alamat: 'Jl. Diponegoro No. 22, Kel. Darmo, Kec. Wonokromo, Surabaya 60241', tanggal: '2025-06-14 16:45', status: 'diproses', total: 970000, items: [{nama:'Brake Pad Set Depan - Bendix',qty:2,harga:485000}], bukti: 'https://picsum.photos/seed/bukti-transfer-6/800/1200.jpg' },
+      { id: 'TRX-20250614-005', customer: 'Hana Pertiwi', wa: '0838-9012-3456', alamat: 'Jl. Gajah Mada No. 55, Kel. Pabean Cantian, Kec. Pabean Cantian, Surabaya 60114', tanggal: '2025-06-14 14:20', status: 'diproses', total: 185000, items: [{nama:'Disc Brake Depan - Honda Beat',qty:1,harga:185000}], bukti: 'https://picsum.photos/seed/bukti-transfer-7/800/1200.jpg' },
+      { id: 'TRX-20250614-006', customer: 'Irfan Maulana', wa: '0819-0123-4567', alamat: 'Jl. Pemuda No. 88, Kel. Pacar Keling, Kec. Tambaksari, Surabaya 60132', tanggal: '2025-06-14 11:30', status: 'diproses', total: 1450000, items: [{nama:'Aki Mobil G-Force GF-45Ah',qty:2,harga:720000},{nama:'Oil Filter Denso - Toyota Avanza',qty:1,harga:65000}], bukti: 'https://picsum.photos/seed/bukti-transfer-8/800/1200.jpg' },
+      { id: 'TRX-20250613-001', customer: 'Joko Widodo', wa: '0812-1111-2222', alamat: 'Jl. Veteran No. 10, Kel. Kotabaru, Kec. Gondokusuman, Yogyakarta 55221', tanggal: '2025-06-13 09:00', status: 'dikirim', total: 720000, items: [{nama:'Aki Mobil G-Force GF-45Ah',qty:1,harga:720000}], resi: 'JNE-1234567890', bukti: 'https://picsum.photos/seed/bukti-transfer-9/800/1200.jpg' },
+      { id: 'TRX-20250613-002', customer: 'Kartika Sari', wa: '0856-2222-3333', alamat: 'Jl. Imam Bonjol No. 33, Kel. Pekunden, Kec. Semarang Tengah, Semarang 50134', tanggal: '2025-06-13 08:15', status: 'dikirim', total: 550000, items: [{nama:'Oil Filter Denso - Toyota Avanza',qty:5,harga:65000},{nama:'Busi NGK Iridium - Honda Vario',qty:3,harga:95000}], resi: 'SICEPAT-9876543210', bukti: 'https://picsum.photos/seed/bukti-transfer-10/800/1200.jpg' },
+      { id: 'TRX-20250610-001', customer: 'Lukman Hakim', wa: '0813-3333-4444', alamat: 'Jl. Supratman No. 77, Kel. Citarum, Kec. Bandung Wetan, Bandung 40115', tanggal: '2025-06-10 15:30', status: 'selesai', total: 485000, items: [{nama:'Brake Pad Set Depan - Bendix',qty:1,harga:485000}], bukti: 'https://picsum.photos/seed/bukti-transfer-11/800/1200.jpg' },
+      { id: 'TRX-20250609-004', customer: 'Mega Putri', wa: '0821-4444-5555', alamat: 'Jl. Asia Afrika No. 15, Kel. Braga, Kec. Sumur Bandung, Bandung 40111', tanggal: '2025-06-09 12:00', status: 'selesai', total: 95000, items: [{nama:'Busi NGK Iridium - Honda Vario',qty:1,harga:95000}], bukti: 'https://picsum.photos/seed/bukti-transfer-12/800/1200.jpg' },
+      { id: 'TRX-20250608-002', customer: 'Nanda Pratama', wa: '0857-5555-6666', alamat: 'Jl. Diponegoro No. 44, Kel. Darmo, Kec. Wonokromo, Surabaya 60241', tanggal: '2025-06-08 10:45', status: 'selesai', total: 185000, items: [{nama:'Disc Brake Depan - Honda Beat',qty:1,harga:185000}], bukti: 'https://picsum.photos/seed/bukti-transfer-13/800/1200.jpg' },
+      { id: 'TRX-20250607-003', customer: 'Olivia Tan', wa: '0819-6666-7777', alamat: 'Jl. Gajah Mada No. 66, Kel. Pabean Cantian, Kec. Pabean Cantian, Surabaya 60114', tanggal: '2025-06-07 14:10', status: 'selesai', total: 1300000, items: [{nama:'Aki Mobil G-Force GF-45Ah',qty:1,harga:720000},{nama:'Brake Pad Set Depan - Bendix',qty:1,harga:485000},{nama:'Oil Filter Denso - Toyota Avanza',qty:2,harga:65000}], bukti: 'https://picsum.photos/seed/bukti-transfer-14/800/1200.jpg' },
+      { id: 'TRX-20250612-007', customer: 'Rizky Ananda', wa: '0838-7777-8888', alamat: 'Jl. Pemuda No. 99, Kel. Pacar Keling, Kec. Tambaksari, Surabaya 60132', tanggal: '2025-06-12 17:00', status: 'dibatalkan', total: 485000, items: [{nama:'Brake Pad Set Depan - Bendix',qty:1,harga:485000}], bukti: 'https://picsum.photos/seed/bukti-transfer-15/800/1200.jpg' },
+    ];
+
+    let statusFilter = 'all';
+    let activeOrderId = null;
+
+    // ==================== HELPERS ====================
+    function fmt(n) { return 'Rp' + n.toLocaleString('id-ID'); }
+    function fmtDate(ts) { return new Date(ts).toLocaleDateString('id-ID', {day:'numeric',month:'short',year:'numeric'}); }
+    function fmtTime(ts) { return new Date(ts).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'}); }
+
+    const statusMap = {
+      menunggu_verifikasi: { label: 'Menunggu', cls: 'badge-menunggu', pulse: true },
+      diproses: { label: 'Diproses', cls: 'badge-diproses', pulse: false },
+      dikirim: { label: 'Dikirim', cls: 'badge-dikirim', pulse: false },
+      selesai: { label: 'Selesai', cls: 'badge-selesai', pulse: false },
+      dibatalkan: { label: 'Dibatalkan', cls: 'badge-dibatalkan', pulse: false },
+    };
+
+    function statusBadge(status) {
+      const s = statusMap[status] || statusMap.menunggu_verifikasi;
+      const dot = s.pulse ? `<span class="w-1.5 h-1.5 bg-brand-red rounded-full pulse-dot mr-1.5"></span>` : '';
+      return `<span class="inline-flex items-center px-2 py-0.5 ${s.cls} text-[10px] font-semibold rounded-md">${dot}${s.label}</span>`;
+    }
+
+    // ==================== COUNT TABS ====================
+    function updateCounts() {
+      const counts = {};
+      orders.forEach(o => { counts[o.status] = (counts[o.status] || 0) + 1; });
+      document.getElementById('tab-menunggu').textContent = counts.menunggu_verifikasi || 0;
+      document.getElementById('tab-diproses').textContent = counts.diproses || 0;
+      document.getElementById('tab-dikirim').textContent = counts.dikirim || 0;
+      document.getElementById('tab-selesai').textContent = counts.selesai || 0;
+
+      const pending = counts.menunggu_verifikasi || 0;
+      document.getElementById('sidebar-badge').textContent = pending;
+      document.getElementById('header-badge').textContent = pending + ' menunggu';
+    }
+
+    // ==================== RENDER ORDERS ====================
+    function renderOrders() {
+      const search = document.getElementById('search-input').value.toLowerCase().trim();
+      let filtered = orders.filter(o => {
+        const matchSearch = !search || o.id.toLowerCase().includes(search) || o.customer.toLowerCase().includes(search);
+        const matchStatus = statusFilter === 'all' || o.status === statusFilter;
+        return matchSearch && matchStatus;
+      });
+
+      const tbody = document.getElementById('orders-tbody');
+      const empty = document.getElementById('table-empty');
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        empty.classList.remove('hidden');
+        document.getElementById('showing-text').textContent = '';
+        lucide.createIcons();
+        return;
+      }
+
+      empty.classList.add('hidden');
+      document.getElementById('showing-text').textContent = 'Menampilkan ' + filtered.length + ' dari ' + orders.length + ' pesanan';
+
+      tbody.innerHTML = filtered.map(o => `
+        <tr class="tbl-row border-b border-slate-50 last:border-0 cursor-pointer ${activeOrderId === o.id ? 'row-active' : ''}" onclick="openDetail('${o.id}')">
+          <td class="px-4 py-3">
+            <p class="text-[13px] font-mono font-semibold text-brand-dark">${o.id}</p>
+            <p class="text-[10px] text-slate-400 sm:hidden">${fmtDate(o.tanggal)}</p>
+          </td>
+          <td class="px-4 py-3">
+            <p class="text-[13px] font-medium text-brand-dark">${o.customer}</p>
+            <p class="text-[10px] text-slate-400">${o.wa}</p>
+          </td>
+          <td class="px-4 py-3 text-[12px] text-slate-500 hidden sm:table-cell">
+            <p>${fmtDate(o.tanggal)}</p>
+            <p class="text-[10px] text-slate-400">${fmtTime(o.tanggal)}</p>
+          </td>
+          <td class="px-4 py-3 text-right">
+            <p class="text-[13px] font-semibold text-brand-dark tabular-nums">${fmt(o.total)}</p>
+          </td>
+          <td class="px-4 py-3">${statusBadge(o.status)}</td>
+          <td class="px-4 py-3 text-right">
+            <button onclick="event.stopPropagation(); openDetail('${o.id}')" class="act-btn inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium text-slate-500 rounded-md hover:bg-slate-100">
+              <i data-lucide="eye" class="w-3 h-3"></i>
+              Periksa
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      updateCounts();
+      lucide.createIcons();
+    }
+
+    // ==================== FILTER ====================
+    function filterStatus(status) {
+      statusFilter = status;
+      document.querySelectorAll('.status-tab').forEach(tab => {
+        tab.classList.remove('active', 'bg-slate-900', 'text-white');
+        tab.classList.add('bg-white', 'text-slate-500', 'border', 'border-slate-200');
+        if (tab.dataset.st === status) {
+          tab.classList.add('active', 'bg-slate-900', 'text-white');
+          tab.classList.remove('bg-white', 'text-slate-500', 'border', 'border-slate-200');
+        }
+      });
+      renderOrders();
+    }
+
+    // ==================== DETAIL PANEL ====================
+    function openDetail(id) {
+      activeOrderId = id;
+      const o = orders.find(x => x.id === id);
+      if (!o) return;
+
+      renderOrders(); // Update active row highlight
+
+      document.getElementById('detail-status-badge').innerHTML = statusBadge(o.status);
+
+      const itemsHtml = o.items.map(i => `
+        <div class="flex items-center justify-between py-2.5 border-b border-slate-50 last:border-0">
+          <div class="flex-1 min-w-0 mr-4">
+            <p class="text-[13px] font-medium text-brand-dark truncate">${i.nama}</p>
+            <p class="text-[11px] text-slate-400">${i.qty} × ${fmt(i.harga)}</p>
+          </div>
+          <p class="text-[13px] font-semibold text-brand-dark tabular-nums shrink-0">${fmt(i.qty * i.harga)}</p>
+        </div>
+      `).join('');
+
+      const isPending = o.status === 'menunggu_verifikasi';
+      const isProcessed = o.status === 'diproses';
+      const isShipped = o.status === 'dikirim';
+      const canAct = isPending || isProcessed || isShipped;
+
+      let actionsHtml = '';
+
+      if (isPending) {
+        actionsHtml = `
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="updateStatus('${o.id}','diproses')" class="act-btn h-11 flex items-center justify-center bg-brand-red hover:bg-brand-red-hover text-white text-[13px] font-semibold rounded-md">
+              <i data-lucide="check" class="w-4 h-4 mr-1.5"></i>
+              Konfirmasi & Proses
+            </button>
+            <button onclick="updateStatus('${o.id}','dibatalkan')" class="act-btn h-11 flex items-center justify-center border border-slate-200 text-slate-600 text-[13px] font-semibold rounded-md hover:bg-slate-50">
+              <i data-lucide="x" class="w-4 h-4 mr-1.5"></i>
+              Tolak / Batalkan
+            </button>
+          </div>
+        `;
+      } else if (isProcessed) {
+        actionsHtml = `
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Update Status</label>
+              <div class="grid grid-cols-2 gap-3">
+                <button onclick="updateStatus('${o.id}','dikirim')" class="act-btn h-10 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white text-[12px] font-semibold rounded-md">
+                  <i data-lucide="truck" class="w-3.5 h-3.5 mr-1.5"></i>
+                  Tandai Dikirim
+                </button>
+                <button onclick="updateStatus('${o.id}','dibatalkan')" class="act-btn h-10 flex items-center justify-center border border-slate-200 text-slate-600 text-[12px] font-semibold rounded-md hover:bg-slate-50">
+                  <i data-lucide="x" class="w-3.5 h-3.5 mr-1.5"></i>
+                  Batalkan
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (isShipped) {
+        actionsHtml = `
+          <div class="space-y-3">
+            ${o.resi ? `
+              <div class="bg-green-50 border border-green-200 rounded-md px-3.5 py-2.5 flex items-center justify-between">
+                <div>
+                  <p class="text-[10px] text-green-600 font-semibold uppercase tracking-wider">Nomor Resi</p>
+                  <p class="text-[13px] font-mono font-bold text-green-800 mt-0.5">${o.resi}</p>
+                </div>
+                <button onclick="copyText('${o.resi}')" class="w-7 h-7 flex items-center justify-center rounded-md bg-white border border-green-200 text-green-600 hover:bg-green-100">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            ` : `
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Nomor Resi</label>
+                <div class="flex gap-2">
+                  <input id="resi-input" type="text" placeholder="Contoh: JNE-1234567890" class="input-field flex-1 h-10 px-3 border border-slate-200 rounded-md text-[13px] text-brand-dark placeholder-slate-400">
+                  <button onclick="saveResi('${o.id}')" class="h-10 px-4 bg-brand-red hover:bg-brand-red-hover text-white text-[12px] font-semibold rounded-md">Simpan</button>
+                </div>
+              </div>
+            `}
+            <button onclick="updateStatus('${o.id}','selesai')" class="act-btn w-full h-10 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white text-[12px] font-semibold rounded-md">
+              <i data-lucide="check-circle" class="w-3.5 h-3.5 mr-1.5"></i>
+              Tandai Selesai
+            </button>
+          </div>
+        `;
+      } else {
+        actionsHtml = `
+          <div class="text-center py-4">
+            <p class="text-xs text-slate-400">Tidak ada aksi yang tersedia untuk status ini.</p>
+          </div>
+        `;
+      }
+
+      const body = document.getElementById('detail-body');
+      body.innerHTML = `
+        <div class="p-5 space-y-5">
+
+          <!-- Order Info -->
+          <div class="bg-slate-50 rounded-md p-4 space-y-2.5">
+            <div class="flex justify-between text-[13px]">
+              <span class="text-slate-400">ID Pesanan</span>
+              <span class="font-mono font-semibold text-brand-dark">${o.id}</span>
+            </div>
+            <div class="flex justify-between text-[13px]">
+              <span class="text-slate-400">Tanggal</span>
+              <span class="font-medium text-brand-dark">${fmtDate(o.tanggal)} ${fmtTime(o.tanggal)}</span>
+            </div>
+            <div class="h-px bg-slate-200"></div>
+            <div class="flex justify-between text-[13px]">
+              <span class="text-slate-400">Customer</span>
+              <span class="font-semibold text-brand-dark">${o.customer}</span>
+            </div>
+            <div class="flex justify-between text-[13px]">
+              <span class="text-slate-400">WhatsApp</span>
+              <span class="font-medium text-brand-dark">${o.wa}</span>
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div>
+            <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Alamat Pengiriman</p>
+            <p class="text-[13px] text-slate-600 leading-relaxed bg-slate-50 rounded-md p-3">${o.alamat}</p>
+          </div>
+
+          <!-- Items -->
+          <div>
+            <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Item Pesanan</p>
+            <div class="bg-slate-50 rounded-md px-4 py-1">${itemsHtml}</div>
+          </div>
+
+          <!-- Total -->
+          <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+            <span class="text-[14px] font-semibold text-brand-dark">Total Bayar</span>
+            <span class="text-[18px] font-bold text-slate-900 tabular-nums">${fmt(o.total)}</span>
+          </div>
+
+          <!-- Bukti Transfer -->
+          <div>
+            <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Bukti Transfer</p>
+            <div class="bg-slate-50 rounded-md p-2 cursor-pointer" onclick="openLightbox('${o.bukti}')">
+              <img src="${o.bukti}" alt="Bukti Transfer ${o.id}" class="proof-img w-full rounded-md bg-white object-contain max-h-[300px]" loading="lazy">
+            </div>
+            <p class="text-[10px] text-slate-400 mt-1.5 text-center">Klik gambar untuk memperbesar</p>
+          </div>
+
+          <!-- Actions -->
+          ${canAct ? `
+            <div class="border-t border-slate-100 pt-5">
+              <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Aksi Admin</p>
+              ${actionsHtml}
+            </div>
+          ` : actionsHtml}
+
+          <!-- Quick WA -->
+          <div class="pt-3 border-t border-slate-100">
+            <a href="https://wa.me/62${o.wa.replace(/[^0-9]/g,'')}" target="_blank" class="w-full h-9 flex items-center justify-center gap-2 border border-green-200 text-green-700 text-[12px] font-medium rounded-md hover:bg-green-50 transition-colors">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              Hubungi via WhatsApp
+            </a>
+          </div>
+
+        </div>
+      `;
+
+      // Show panel
+      const panel = document.getElementById('detail-panel');
+      panel.classList.remove('detail-hidden');
+      panel.classList.add('detail-visible');
+
+      lucide.createIcons();
+    }
+
+    function closeDetail() {
+      activeOrderId = null;
+      const panel = document.getElementById('detail-panel');
+      panel.classList.remove('detail-visible');
+      panel.classList.add('detail-hidden');
+      renderOrders();
+    }
+
+    // ==================== STATUS UPDATE ====================
+    function updateStatus(id, newStatus) {
+      const o = orders.find(x => x.id === id);
+      if (!o) return;
+      const oldStatus = o.status;
+      o.status = newStatus;
+
+      const labels = { diproses: 'diproses', dikirim: 'dikirim', selesai: 'selesai', dibatalkan: 'dibatalkan' };
+      showToast(`Pesanan ${id} status diubah ke "${labels[newStatus] || newStatus}"`, 'success');
+
+      renderOrders();
+      openDetail(id);
+    }
+
+    // ==================== SAVE RESI ====================
+    function saveResi(id) {
+      const input = document.getElementById('resi-input');
+      if (!input || !input.value.trim()) {
+        showToast('Nomor resi tidak boleh kosong', 'error');
+        return;
+      }
+      const o = orders.find(x => x.id === id);
+      if (!o) return;
+      o.resi = input.value.trim();
+      showToast(`Nomor resi berhasil disimpan`, 'success');
+      openDetail(id);
+    }
+
+    // ==================== LIGHTBOX ====================
+    function openLightbox(src) {
+      document.getElementById('lightbox-img').src = src;
+      document.getElementById('lightbox').classList.remove('hidden');
+    }
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.add('hidden');
+    }
+
+    // ==================== COPY ====================
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Nomor resi disalin: ' + text, 'success');
+      }).catch(() => {
+        showToast('Nomor resi: ' + text, 'info');
+      });
+    }
+
+    // ==================== SIDEBAR ====================
+    function openSidebar() {
+      const overlay = document.getElementById('sidebar-overlay');
+      const sidebar = document.getElementById('sidebar');
+      overlay.classList.remove('hidden');
+      requestAnimationFrame(() => { overlay.style.opacity = '1'; sidebar.style.transform = 'translateX(0)'; });
+    }
+    function closeSidebar() {
+      const overlay = document.getElementById('sidebar-overlay');
+      const sidebar = document.getElementById('sidebar');
+      overlay.style.opacity = '0';
+      sidebar.style.transform = 'translateX(-100%)';
+      setTimeout(() => overlay.classList.add('hidden'), 250);
+    }
+
+    // ==================== TOAST ====================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      let bg, icon, bc;
+      switch (type) {
+        case 'success': bg='bg-green-50 border-green-200'; icon='check-circle'; bc='border-l-4 border-l-green-500'; break;
+        case 'error': bg='bg-red-50 border-red-200'; icon='x-circle'; bc='border-l-4 border-l-red-500'; break;
+        default: bg='bg-slate-50 border-slate-200'; icon='info'; bc='border-l-4 border-l-slate-400';
+      }
+      const ic = type==='success'?'text-green-500':type==='error'?'text-red-500':'text-slate-500';
+      const tc = type==='success'?'text-green-800':type==='error'?'text-red-800':'text-slate-700';
+      toast.className = `toast-enter flex items-start gap-3 px-4 py-3 rounded-md border shadow-sm max-w-sm w-full ${bg} ${bc}`;
+      toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 ${ic} shrink-0 mt-0.5"></i><span class="text-sm ${tc} leading-snug">${message}</span>`;
+      container.appendChild(toast);
+      lucide.createIcons();
+      setTimeout(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 250); }, 3500);
+    }
+
+    // ==================== KEYBOARD ====================
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (!document.getElementById('lightbox').classList.contains('hidden')) closeLightbox();
+        else if (activeOrderId) closeDetail();
+      }
+    });
+
+    // ==================== INIT ====================
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      renderOrders();
+    });
+  </script>
+</body>
+</html>

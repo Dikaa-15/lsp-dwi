@@ -1,0 +1,214 @@
+<%- include('../partials/header') %>
+<%- include('../partials/sidebar') %>
+
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+      <h1 class="text-lg font-bold text-brand-dark tracking-tight">Daftar Produk</h1>
+      <p class="text-xs text-slate-400 mt-0.5">Kelola katalog suku cadang otomotif Anda</p>
+    </div>
+    <button onclick="openModal()" class="inline-flex items-center gap-2 h-10 px-5 bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-md transition-colors shrink-0">
+      <i data-lucide="plus" class="w-4 h-4"></i>
+      Tambah Produk
+    </button>
+</div>
+
+<!-- Filter Bar -->
+<div class="bg-white rounded-md border border-slate-200 p-3 mb-6 shadow-sm">
+    <div class="flex flex-col sm:flex-row gap-3">
+      <div class="input-field flex items-center flex-1 border border-slate-200 rounded-md h-10 px-3 bg-slate-50/50">
+        <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
+        <input id="search-input" type="text" placeholder="Cari Nama / Kode Produk..." class="flex-1 bg-transparent text-[13px] text-brand-dark placeholder-slate-400 ml-2 outline-none">
+      </div>
+      <div class="flex gap-3">
+        <select id="filter-kategori" class="input-field h-10 px-3 border border-slate-200 rounded-md text-[13px] text-slate-600 outline-none appearance-none bg-white cursor-pointer min-w-[140px]">
+          <option value="">Semua Kategori</option>
+          <% kategoriList.forEach(k => { %>
+            <option value="<%= k.id %>"><%= k.nama_kategori %></option>
+          <% }) %>
+        </select>
+        <select id="filter-brand" class="input-field h-10 px-3 border border-slate-200 rounded-md text-[13px] text-slate-600 outline-none appearance-none bg-white cursor-pointer min-w-[120px]">
+          <option value="">Semua Brand</option>
+          <% brandList.forEach(b => { %>
+            <option value="<%= b.id %>"><%= b.nama_brand %></option>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+</div>
+
+<!-- Data Table -->
+<div class="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-slate-100 bg-slate-50/50">
+            <th class="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Kode</th>
+            <th class="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Gambar</th>
+            <th class="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider min-w-[200px]">Nama Produk</th>
+            <th class="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Tipe</th>
+            <th class="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Kategori/Brand</th>
+            <th class="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right">Harga</th>
+            <th class="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right">Stok</th>
+            <th class="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="product-tbody">
+            <% produkList.forEach(p => { %>
+                <tr class="list-row border-b border-slate-50 last:border-0">
+                    <td class="px-4 py-3 text-[13px] font-mono font-medium text-slate-500"><%= p.kode_produk %></td>
+                    <td class="px-4 py-3">
+                        <div class="w-10 h-10 bg-slate-50 rounded-md overflow-hidden flex items-center justify-center border border-slate-100 p-1">
+                            <img src="<%= p.gambar || '/images/default-produk.png' %>" alt="" class="w-full h-full object-contain">
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <p class="text-[13px] font-medium text-brand-dark leading-snug"><%= p.nama_produk %></p>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="text-[11px] text-slate-500 px-2 py-0.5 bg-slate-100 rounded-md"><%= p.tipe_kendaraan %></span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <p class="text-[11px] text-brand-dark font-medium"><%= p.nama_kategori %></p>
+                        <p class="text-[10px] text-slate-400"><%= p.nama_brand %></p>
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <p class="text-[13px] font-semibold text-brand-dark">Rp<%= p.harga.toLocaleString('id-ID') %></p>
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="text-[13px] <%= p.stok < 5 ? 'text-red-500 font-bold' : 'text-slate-600' %>"><%= p.stok %></span>
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <div class="flex items-center justify-end gap-1">
+                            <button onclick="editProduk('<%= JSON.stringify(p) %>')" class="w-7 h-7 flex items-center justify-center rounded text-blue-400 hover:bg-blue-50" title="Edit">
+                                <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <a href="/admin/produk/delete/<%= p.kode_produk %>" onclick="return confirm('Hapus produk ini?')" class="w-7 h-7 flex items-center justify-center rounded text-brand-red hover:bg-red-50" title="Hapus">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            <% }) %>
+            <% if (produkList.length === 0) { %>
+                <tr>
+                    <td colspan="8" class="px-4 py-16 text-center text-slate-400 text-xs">Belum ada produk</td>
+                </tr>
+            <% } %>
+        </tbody>
+      </table>
+    </div>
+</div>
+
+<!-- Modal Produk -->
+<div id="produk-modal" class="modal-hidden fixed inset-0 z-[150] flex items-start justify-center p-4 pt-[5vh]">
+    <div class="modal-overlay absolute inset-0 bg-black/30" onclick="closeModal()"></div>
+    <div class="modal-panel relative bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+        <h3 id="modal-title" class="text-sm font-semibold text-brand-dark">Tambah Produk Baru</h3>
+        <button onclick="closeModal()" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-400">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto px-6 py-5">
+        <form id="product-form" action="/admin/produk/store" method="POST" enctype="multipart/form-data" class="space-y-4">
+          
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Kode Produk <span class="text-brand-red">*</span></label>
+            <input name="kode_produk" id="f-kode" type="text" placeholder="Contoh: PRD-001" class="input-field w-full h-10 px-3 border border-slate-200 rounded-md text-[14px] text-brand-dark" required>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Nama Produk <span class="text-brand-red">*</span></label>
+            <input name="nama_produk" id="f-nama" type="text" placeholder="Contoh: Brake Pad Set" class="input-field w-full h-10 px-3 border border-slate-200 rounded-md text-[14px] text-brand-dark" required>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Tipe Kendaraan <span class="text-brand-red">*</span></label>
+              <select name="tipe_kendaraan" id="f-tipe" class="input-field w-full h-10 px-3 border border-slate-200 rounded-md text-[14px] text-brand-dark outline-none bg-white cursor-pointer" required>
+                <option value="">Pilih Tipe</option>
+                <option value="Mobil">Mobil</option>
+                <option value="Motor">Motor</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Kategori <span class="text-brand-red">*</span></label>
+              <select name="kategori_id" id="f-kategori" class="input-field w-full h-10 px-3 border border-slate-200 rounded-md text-[14px] text-brand-dark outline-none bg-white cursor-pointer" required>
+                <option value="">Pilih Kategori</option>
+                <% kategoriList.forEach(k => { %>
+                    <option value="<%= k.id %>"><%= k.nama_kategori %></option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Brand <span class="text-brand-red">*</span></label>
+            <select name="brand_id" id="f-brand" class="input-field w-full h-10 px-3 border border-slate-200 rounded-md text-[14px] text-brand-dark outline-none bg-white cursor-pointer" required>
+              <option value="">Pilih Brand</option>
+              <% brandList.forEach(b => { %>
+                <option value="<%= b.id %>"><%= b.nama_brand %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Harga (Rp) <span class="text-brand-red">*</span></label>
+              <input name="harga" id="f-harga" type="number" placeholder="0" class="input-field w-full h-10 px-3 border border-slate-200 rounded-md text-[14px] text-brand-dark" required>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Stok <span class="text-brand-red">*</span></label>
+              <input name="stok" id="f-stok" type="number" min="0" placeholder="0" class="input-field w-full h-10 px-3 border border-slate-200 rounded-md text-[14px] text-brand-dark" required>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Deskripsi</label>
+            <textarea name="deskripsi" id="f-deskripsi" rows="3" placeholder="Deskripsi singkat..." class="input-field w-full px-3 py-2 border border-slate-200 rounded-md text-[14px] text-brand-dark min-h-[72px]"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Gambar Produk</label>
+            <input type="file" name="gambar" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
+          </div>
+        </form>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
+        <button onclick="closeModal()" class="h-10 px-5 text-sm font-medium text-slate-600 rounded-md hover:bg-slate-50">Batal</button>
+        <button onclick="document.getElementById('product-form').submit()" class="h-10 px-5 bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-md shadow-sm">Simpan</button>
+      </div>
+    </div>
+</div>
+
+<script>
+    function openModal() {
+        document.getElementById('modal-title').textContent = 'Tambah Produk Baru';
+        document.getElementById('product-form').action = '/admin/produk/store';
+        document.getElementById('product-form').reset();
+        document.getElementById('f-kode').readOnly = false;
+        document.getElementById('produk-modal').classList.remove('modal-hidden');
+    }
+
+    function closeModal() { document.getElementById('produk-modal').classList.add('modal-hidden'); }
+
+    function editProduk(dataStr) {
+        const p = JSON.parse(dataStr);
+        document.getElementById('modal-title').textContent = 'Edit Produk';
+        document.getElementById('product-form').action = `/admin/produk/update/${p.kode_produk}`;
+        
+        document.getElementById('f-kode').value = p.kode_produk;
+        document.getElementById('f-kode').readOnly = true;
+        document.getElementById('f-nama').value = p.nama_produk;
+        document.getElementById('f-tipe').value = p.tipe_kendaraan;
+        document.getElementById('f-kategori').value = p.kategori_id;
+        document.getElementById('f-brand').value = p.brand_id;
+        document.getElementById('f-harga').value = p.harga;
+        document.getElementById('f-stok').value = p.stok;
+        document.getElementById('f-deskripsi').value = p.deskripsi || '';
+
+        document.getElementById('produk-modal').classList.remove('modal-hidden');
+    }
+</script>
+
+<%- include('../partials/footer') %>

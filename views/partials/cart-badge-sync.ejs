@@ -1,0 +1,71 @@
+<script>
+  (function () {
+    const STORAGE_KEY = 'autopart-cart-count';
+
+    function getBadge() {
+      return document.getElementById('cart-badge');
+    }
+
+    function normalizeCount(value) {
+      const count = Number(value);
+      return Number.isFinite(count) && count >= 0 ? count : null;
+    }
+
+    function applyCount(count) {
+      const badge = getBadge();
+      if (!badge || count === null) return;
+
+      badge.textContent = String(count);
+      badge.classList.toggle('scale-0', count === 0);
+      badge.classList.toggle('scale-100', count > 0);
+    }
+
+    function readDomCount() {
+      const badge = getBadge();
+      if (!badge) return null;
+      return normalizeCount(badge.textContent || badge.getAttribute('data-count'));
+    }
+
+    function loadStoredCount() {
+      try {
+        return normalizeCount(localStorage.getItem(STORAGE_KEY));
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    function storeCount(count) {
+      if (count === null) return;
+      try {
+        localStorage.setItem(STORAGE_KEY, String(count));
+      } catch (_err) {}
+    }
+
+    function persistFromDom() {
+      const count = readDomCount();
+      if (count !== null) storeCount(count);
+    }
+
+    function syncFromStorage() {
+      const stored = loadStoredCount();
+      if (stored !== null) applyCount(stored);
+    }
+
+    document.addEventListener('DOMContentLoaded', persistFromDom);
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) {
+        syncFromStorage();
+      }
+    });
+
+    window.AutopartCartBadge = {
+      set(count) {
+        const normalized = normalizeCount(count);
+        if (normalized === null) return;
+        applyCount(normalized);
+        storeCount(normalized);
+      },
+      sync: syncFromStorage,
+    };
+  })();
+</script>

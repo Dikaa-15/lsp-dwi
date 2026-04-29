@@ -1,0 +1,50 @@
+    </main>
+    </div> <!-- Close flex-1 min-w-0 -->
+</div> <!-- Close flex min-h-screen from header.ejs -->
+
+<script>
+    function openSidebar() {
+        const overlay = document.getElementById('sidebar-overlay');
+        const sidebar = document.getElementById('sidebar');
+        overlay.classList.remove('hidden');
+        setTimeout(() => {
+            overlay.style.opacity = '1'; 
+            sidebar.style.transform = 'translateX(0)'; 
+        }, 10);
+    }
+
+    function closeSidebar() {
+        const overlay = document.getElementById('sidebar-overlay');
+        const sidebar = document.getElementById('sidebar');
+        overlay.style.opacity = '0';
+        sidebar.style.transform = 'translateX(-100%)';
+        setTimeout(() => overlay.classList.add('hidden'), 250);
+    }
+
+    // Toast Function
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        let bg, icon, bc;
+        switch (type) {
+            case 'success': bg='bg-green-50 border-green-200'; icon='check-circle'; bc='border-l-4 border-l-green-500'; break;
+            case 'error': bg='bg-red-50 border-red-200'; icon='x-circle'; bc='border-l-4 border-l-red-500'; break;
+            default: bg='bg-slate-50 border-slate-200'; icon='info'; bc='border-l-4 border-l-slate-400';
+        }
+        const ic = type==='success'?'text-green-500':type==='error'?'text-red-500':'text-slate-500';
+        const tc = type==='success'?'text-green-800':type==='error'?'text-red-800':'text-slate-700';
+        toast.className = `toast-enter flex items-start gap-3 px-4 py-3 rounded-md border shadow-sm max-w-sm w-full ${bg} ${bc}`;
+        toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 ${ic} shrink-0 mt-0.5"></i><span class="text-sm ${tc} leading-snug">${message}</span>`;
+        container.appendChild(toast);
+        lucide.createIcons();
+        setTimeout(() => { 
+            toast.classList.remove('toast-enter'); 
+            toast.classList.add('toast-exit'); 
+            setTimeout(() => toast.remove(), 250); 
+        }, 3500);
+    }
+
+    lucide.createIcons();
+</script>
+</body>
+</html>

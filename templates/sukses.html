@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pesanan Berhasil — AutoPart Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              red: '#EF4444',
+              'red-hover': '#DC2626',
+              dark: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-feature-settings: "cv11", "ss01"; }
+
+    /* Success icon entrance */
+    .success-icon {
+      animation: successPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    @keyframes successPop {
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Checkmark draw */
+    .check-draw {
+      stroke-dasharray: 40;
+      stroke-dashoffset: 40;
+      animation: drawCheck 0.5s ease 0.4s forwards;
+    }
+    @keyframes drawCheck {
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* Card fade in */
+    .card-enter {
+      animation: cardFade 0.5s ease 0.15s forwards;
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    @keyframes cardFade {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Content stagger */
+    .stagger-1 {
+      animation: contentFade 0.4s ease 0.3s forwards;
+      opacity: 0;
+    }
+    .stagger-2 {
+      animation: contentFade 0.4s ease 0.45s forwards;
+      opacity: 0;
+    }
+    .stagger-3 {
+      animation: contentFade 0.4s ease 0.55s forwards;
+      opacity: 0;
+    }
+    .stagger-4 {
+      animation: contentFade 0.4s ease 0.65s forwards;
+      opacity: 0;
+    }
+    .stagger-5 {
+      animation: contentFade 0.4s ease 0.75s forwards;
+      opacity: 0;
+    }
+    @keyframes contentFade {
+      to { opacity: 1; }
+    }
+
+    /* Confetti particles */
+    .particle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 100;
+      animation: particleFall linear forwards;
+    }
+    @keyframes particleFall {
+      0% {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg) scale(1);
+      }
+      80% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(100vh) rotate(720deg) scale(0.3);
+      }
+    }
+
+    /* Pulse ring behind icon */
+    .pulse-ring {
+      animation: pulseRing 2s ease-out 0.6s infinite;
+    }
+    @keyframes pulseRing {
+      0% {
+        opacity: 0.3;
+        transform: scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(1.8);
+      }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-white font-sans text-brand-dark min-h-screen flex flex-col">
+
+  <!-- ====== MINIMAL HEADER ====== -->
+  <header class="w-full py-5 px-4 sm:px-6">
+    <div class="max-w-7xl mx-auto flex items-center">
+      <a href="#" class="flex items-center gap-2">
+        <div class="w-7 h-7 bg-brand-red rounded-md flex items-center justify-center">
+          <i data-lucide="cog" class="w-3.5 h-3.5 text-white"></i>
+        </div>
+        <span class="text-sm font-semibold text-brand-dark tracking-tight">AutoPart<span class="text-brand-red">Center</span></span>
+      </a>
+    </div>
+  </header>
+
+  <!-- ====== MAIN: Centered Content ====== -->
+  <main class="flex-1 flex items-center justify-center px-4 sm:px-6 py-8">
+    <div class="w-full max-w-md">
+
+      <!-- Success Card -->
+      <div class="card-enter bg-white rounded-lg border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-8 sm:p-10">
+
+        <!-- Success Icon -->
+        <div class="flex justify-center mb-8">
+          <div class="relative">
+            <!-- Pulse ring -->
+            <div class="pulse-ring absolute inset-0 w-20 h-20 bg-green-500/20 rounded-full"></div>
+            <!-- Main circle -->
+            <div class="success-icon relative w-20 h-20 bg-green-500 rounded-full flex items-center justify-center shadow-[0_8px_24px_-4px_rgba(34,197,94,0.35)]">
+              <svg class="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path class="check-draw" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Headline -->
+        <h1 class="stagger-1 text-2xl sm:text-[26px] font-bold text-brand-dark text-center leading-tight tracking-tight">
+          Pesanan Berhasil Dibuat!
+        </h1>
+
+        <!-- Body Text -->
+        <p class="stagger-2 text-sm sm:text-[15px] text-slate-500 text-center leading-relaxed mt-4 max-w-sm mx-auto">
+          Terima kasih! Pesanan Anda telah kami terima dan sedang menunggu verifikasi pembayaran oleh Admin. Kami akan memberikan update segera melalui WhatsApp atau halaman Pesanan Saya.
+        </p>
+
+        <!-- Order Reference Box -->
+        <div class="stagger-3 mt-8 bg-slate-50 rounded-lg px-5 py-4 text-center">
+          <p class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold mb-1">ID Pesanan</p>
+          <p class="text-base sm:text-lg font-mono font-bold text-brand-dark tracking-wide">#INV-20260429-001</p>
+        </div>
+
+        <!-- Divider -->
+        <div class="stagger-4 h-px bg-slate-100 my-8"></div>
+
+        <!-- What's Next Info -->
+        <div class="stagger-4 space-y-3">
+          <p class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold mb-3">Apa selanjutnya?</p>
+
+          <div class="flex items-start gap-3">
+            <div class="w-6 h-6 bg-slate-50 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+              <span class="text-[10px] font-bold text-slate-400">1</span>
+            </div>
+            <p class="text-sm text-slate-500 leading-relaxed">Admin akan memverifikasi bukti pembayaran Anda dalam <strong class="text-slate-600">maksimal 1×24 jam</strong>.</p>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <div class="w-6 h-6 bg-slate-50 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+              <span class="text-[10px] font-bold text-slate-400">2</span>
+            </div>
+            <p class="text-sm text-slate-500 leading-relaxed">Anda akan menerima notifikasi melalui <strong class="text-slate-600">WhatsApp</strong> saat status pesanan diperbarui.</p>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <div class="w-6 h-6 bg-slate-50 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+              <span class="text-[10px] font-bold text-slate-400">3</span>
+            </div>
+            <p class="text-sm text-slate-500 leading-relaxed">Setelah diverifikasi, pesanan akan <strong class="text-slate-600">diproses dan dikirim</strong> ke alamat Anda.</p>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="stagger-5 h-px bg-slate-100 my-8"></div>
+
+        <!-- Action Buttons -->
+        <div class="stagger-5 space-y-3">
+          <a href="#" class="w-full h-12 flex items-center justify-center bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-lg transition-colors duration-200">
+            <i data-lucide="package" class="w-4 h-4 mr-2"></i>
+            Lihat Status Pesanan
+          </a>
+          <a href="#" class="w-full h-12 flex items-center justify-center border-2 border-brand-red text-brand-red text-sm font-semibold rounded-lg hover:bg-brand-red-light transition-colors duration-200">
+            <i data-lucide="home" class="w-4 h-4 mr-2"></i>
+            Kembali ke Beranda
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Help Text -->
+      <p class="stagger-5 text-center text-[11px] text-slate-400 mt-6 leading-relaxed">
+        Ada kendala? Hubungi kami via
+        <a href="#" class="font-medium text-slate-500 hover:text-brand-dark transition-colors">WhatsApp</a>
+        atau
+        <a href="#" class="font-medium text-slate-500 hover:text-brand-dark transition-colors">Halaman FAQ</a>
+      </p>
+
+    </div>
+  </main>
+
+  <!-- ====== MINIMAL FOOTER ====== -->
+  <footer class="py-5 px-4 sm:px-6">
+    <div class="max-w-7xl mx-auto text-center">
+      <p class="text-[11px] text-slate-300">&copy; 2025 AutoPart Center. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    // ==================== CONFETTI ====================
+    function launchConfetti() {
+      const colors = ['#22C55E', '#EF4444', '#F87171', '#4ADE80', '#FBBF24', '#60A5FA'];
+      const count = 40;
+
+      for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+          const particle = document.createElement('div');
+          particle.classList.add('particle');
+
+          const size = Math.random() * 6 + 4;
+          const isCircle = Math.random() > 0.5;
+
+          particle.style.cssText = `
+            left: ${Math.random() * 100}vw;
+            top: -${size}px;
+            width: ${size}px;
+            height: ${isCircle ? size : size * 2.5}px;
+            background: ${colors[Math.floor(Math.random() * colors.length)]};
+            border-radius: ${isCircle ? '50%' : '2px'};
+            animation-duration: ${Math.random() * 2 + 2.5}s;
+          `;
+
+          document.body.appendChild(particle);
+          setTimeout(() => particle.remove(), 4500);
+        }, i * 40);
+      }
+    }
+
+    // ==================== INIT ====================
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+
+      // Launch confetti after success icon pops
+      setTimeout(launchConfetti, 700);
+    });
+  </script>
+</body>
+</html>

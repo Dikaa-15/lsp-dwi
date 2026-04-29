@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              red: '#EF4444',
+              'red-hover': '#DC2626',
+              'red-light': '#FEF2F2',
+              dark: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-feature-settings: "cv11", "ss01"; }
+    .payment-card { cursor: pointer; transition: all 0.2s ease; border-width: 2px; position: relative; overflow: hidden; background: #fff; }
+    .payment-card:hover { border-color: #EF4444; box-shadow: 0 10px 20px rgba(239,68,68,0.08); transform: translateY(-1px); }
+    .payment-card.selected { border-color: #EF4444; background: linear-gradient(180deg, #FFFFFF 0%, #FEF2F2 100%); box-shadow: 0 14px 28px rgba(239,68,68,0.16); transform: translateY(-2px); }
+    .payment-card.selected .payment-check { opacity: 1; transform: translateY(0) scale(1); }
+    .payment-card.selected .payment-title { color: #DC2626; }
+    .payment-check { opacity: 0; transform: translateY(-2px) scale(0.85); transition: all 0.2s ease; }
+    .preview-box { display: none; }
+    .preview-box.show { display: block; }
+    .preview-placeholder { display: flex; }
+    .preview-box.show .preview-placeholder { display: none; }
+  </style>
+</head>
+<body class="bg-white font-sans text-brand-dark min-h-screen">
+
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 h-14 flex items-center px-4 sm:px-8 shadow-sm">
+      <a href="/" class="flex items-center gap-2">
+        <div class="w-7 h-7 bg-brand-red rounded-md flex items-center justify-center">
+          <i data-lucide="cog" class="w-3.5 h-3.5 text-white"></i>
+        </div>
+        <span class="text-sm font-semibold text-brand-dark hidden sm:block">AutoPart<span class="text-brand-red">Center</span></span>
+      </a>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="mb-6">
+      <%- include('partials/back-button', { fallback: '/cart', wrapperClass: '' }) %>
+    </div>
+
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-brand-dark">Checkout</h1>
+      <p class="text-sm text-slate-400 mt-1">Periksa kembali pesanan Anda sebelum membayar.</p>
+    </div>
+
+    <% if (messages.error) { %>
+        <div class="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-md flex items-center gap-2">
+            <i data-lucide="alert-circle" class="w-4 h-4"></i>
+            <%= messages.error %>
+        </div>
+    <% } %>
+
+    <form action="/checkout/process" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="item_ids" value="<%= itemIds %>">
+        
+        <div class="flex flex-col lg:flex-row gap-8">
+          <!-- LEFT -->
+          <div class="flex-1 space-y-6">
+            
+            <!-- Address -->
+            <div class="bg-white rounded-md border border-slate-200 p-6 shadow-sm">
+              <div class="flex items-center gap-2.5 mb-4">
+                <i data-lucide="map-pin" class="w-5 h-5 text-slate-400"></i>
+                <h2 class="text-sm font-semibold">Alamat Pengiriman</h2>
+              </div>
+              <textarea name="alamat_pengiriman" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-md p-3 text-sm focus:outline-none focus:border-brand-red" placeholder="Tulis alamat pengiriman lengkap di sini" required></textarea>
+              <p class="text-[11px] text-slate-400 mt-2">WhatsApp: <%= userData.whatsapp || '-' %></p>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="bg-white rounded-md border border-slate-200 p-6 shadow-sm">
+              <div class="flex items-center gap-2.5 mb-4">
+                <i data-lucide="credit-card" class="w-5 h-5 text-slate-400"></i>
+                <h2 class="text-sm font-semibold">Metode Pembayaran</h2>
+              </div>
+              <input type="hidden" name="metode_pembayaran" id="payment-method" value="bca">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <button type="button" class="payment-card selected border border-slate-200 p-4 rounded-md text-center" data-method="bca" data-needs-proof="true" aria-pressed="true" onclick="selectPaymentMethod(this)">
+                    <span class="payment-check absolute top-3 right-3 w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center">
+                      <i data-lucide="check" class="w-3 h-3"></i>
+                    </span>
+                    <p class="payment-title text-sm font-bold">Bank BCA</p>
+                    <p class="text-[10px] text-slate-500 mt-1">8720-5431-098</p>
+                </button>
+                <button type="button" class="payment-card border border-slate-200 p-4 rounded-md text-center" data-method="bni" data-needs-proof="true" aria-pressed="false" onclick="selectPaymentMethod(this)">
+                    <span class="payment-check absolute top-3 right-3 w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center">
+                      <i data-lucide="check" class="w-3 h-3"></i>
+                    </span>
+                    <p class="payment-title text-sm font-bold">Bank BNI</p>
+                    <p class="text-[10px] text-slate-500 mt-1">0091-2345-6789</p>
+                </button>
+                <button type="button" class="payment-card border border-slate-200 p-4 rounded-md text-center" data-method="mandiri" data-needs-proof="true" aria-pressed="false" onclick="selectPaymentMethod(this)">
+                    <span class="payment-check absolute top-3 right-3 w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center">
+                      <i data-lucide="check" class="w-3 h-3"></i>
+                    </span>
+                    <p class="payment-title text-sm font-bold">Bank Mandiri</p>
+                    <p class="text-[10px] text-slate-500 mt-1">1300-0192-3456</p>
+                </button>
+                <button type="button" class="payment-card border border-slate-200 p-4 rounded-md text-center" data-method="bri" data-needs-proof="true" aria-pressed="false" onclick="selectPaymentMethod(this)">
+                    <span class="payment-check absolute top-3 right-3 w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center">
+                      <i data-lucide="check" class="w-3 h-3"></i>
+                    </span>
+                    <p class="payment-title text-sm font-bold">Bank BRI</p>
+                    <p class="text-[10px] text-slate-500 mt-1">0258-01-000456</p>
+                </button>
+                <button type="button" class="payment-card border border-slate-200 p-4 rounded-md text-center" data-method="cod" data-needs-proof="false" aria-pressed="false" onclick="selectPaymentMethod(this)">
+                    <span class="payment-check absolute top-3 right-3 w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center">
+                      <i data-lucide="check" class="w-3 h-3"></i>
+                    </span>
+                    <p class="payment-title text-sm font-bold">COD</p>
+                    <p class="text-[10px] text-slate-500 mt-1">Bayar saat barang diterima</p>
+                </button>
+              </div>
+            </div>
+
+            <!-- Upload -->
+            <div id="transfer-upload" class="bg-white rounded-md border border-slate-200 p-6 shadow-sm">
+              <div class="flex items-center gap-2.5 mb-4">
+                <i data-lucide="upload-cloud" class="w-5 h-5 text-slate-400"></i>
+                <h2 class="text-sm font-semibold">Upload Bukti Transfer</h2>
+              </div>
+              <div class="space-y-4">
+                <input type="file" id="bukti-input" name="bukti_transfer" accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200" required onchange="previewImage(this)">
+                <p id="file-name" class="text-[11px] text-slate-400 hidden"></p>
+                <p id="upload-error" class="hidden text-[11px] font-medium text-red-500"></p>
+                
+                <!-- Preview Box -->
+                <div id="preview-container" class="preview-box border-2 border-dashed border-slate-200 rounded-lg p-4 text-center">
+                    <div class="preview-placeholder flex-col items-center justify-center gap-2 min-h-[180px] text-slate-400">
+                      <i data-lucide="image" class="w-8 h-8"></i>
+                      <p class="text-[11px] font-medium">Preview akan tampil setelah gambar dipilih</p>
+                    </div>
+                    <div class="preview-image-wrap hidden">
+                      <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Preview Bukti</p>
+                      <img id="img-preview" src="" alt="Preview bukti transfer" class="max-w-full h-auto max-h-[300px] mx-auto rounded shadow-sm object-contain">
+                    </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT: SUMMARY -->
+          <div class="lg:w-[360px]">
+            <div class="bg-slate-50 rounded-md border border-slate-200 p-6 sticky top-20 shadow-sm">
+              <h3 class="text-sm font-semibold mb-6">Ringkasan Pesanan</h3>
+              
+              <div class="space-y-3 mb-6">
+                <% let subtotal = 0; %>
+                <% items.forEach(item => { %>
+                  <% subtotal += item.harga * item.jumlah; %>
+                  <div class="flex items-center gap-3 bg-white p-3 rounded border border-slate-100">
+                    <img src="<%= item.gambar || '/images/default-produk.png' %>" class="w-10 h-10 object-contain mix-blend-multiply">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-xs font-medium truncate"><%= item.nama_produk %></p>
+                      <p class="text-[10px] text-slate-400"><%= item.jumlah %> x Rp<%= item.harga.toLocaleString('id-ID') %></p>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+
+              <div class="h-px bg-slate-200 mb-6"></div>
+              
+              <input type="hidden" name="total_bayar" value="<%= subtotal %>">
+              <div class="flex justify-between items-end mb-8">
+                <span class="text-sm font-semibold">Total Bayar</span>
+                <span class="text-xl font-bold text-brand-dark">Rp<%= subtotal.toLocaleString('id-ID') %></span>
+              </div>
+
+              <button type="submit" class="w-full h-12 bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-md transition-all shadow-lg shadow-brand-red/20">
+                Konfirmasi & Bayar
+              </button>
+            </div>
+          </div>
+        </div>
+    </form>
+  </main>
+
+  <script>
+    function selectPaymentMethod(el) {
+        const method = el.dataset.method;
+        const needsProof = el.dataset.needsProof === 'true';
+        const uploadSection = document.getElementById('transfer-upload');
+        const proofInput = document.getElementById('bukti-input');
+        const previewContainer = document.getElementById('preview-container');
+        const previewImageWrap = previewContainer.querySelector('.preview-image-wrap');
+        const fileName = document.getElementById('file-name');
+        const uploadError = document.getElementById('upload-error');
+
+        document.getElementById('payment-method').value = method;
+        document.querySelectorAll('.payment-card').forEach(card => card.classList.remove('selected'));
+        document.querySelectorAll('.payment-card').forEach(card => card.setAttribute('aria-pressed', 'false'));
+        el.classList.add('selected');
+        el.setAttribute('aria-pressed', 'true');
+        lucide.createIcons();
+
+        uploadSection.classList.toggle('hidden', !needsProof);
+        proofInput.required = needsProof;
+
+        if (!needsProof) {
+            proofInput.value = '';
+            previewContainer.classList.remove('show');
+            previewImageWrap.classList.add('hidden');
+            fileName.classList.add('hidden');
+            fileName.textContent = '';
+            uploadError.classList.add('hidden');
+            uploadError.textContent = '';
+        }
+    }
+
+    function previewImage(input) {
+        const container = document.getElementById('preview-container');
+        const preview = document.getElementById('img-preview');
+        const previewImageWrap = container.querySelector('.preview-image-wrap');
+        const fileName = document.getElementById('file-name');
+        const uploadError = document.getElementById('upload-error');
+        
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            if (!file.type || !file.type.startsWith('image/')) {
+                input.value = '';
+                container.classList.remove('show');
+                preview.src = '';
+                previewImageWrap.classList.add('hidden');
+                fileName.classList.add('hidden');
+                uploadError.textContent = 'Harap upload file gambar (JPG, PNG, WebP).';
+                uploadError.classList.remove('hidden');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                container.classList.add('show');
+                previewImageWrap.classList.remove('hidden');
+                fileName.textContent = file.name;
+                fileName.classList.remove('hidden');
+                uploadError.classList.add('hidden');
+                uploadError.textContent = '';
+            }
+            reader.readAsDataURL(file);
+        } else {
+            container.classList.remove('show');
+            previewImageWrap.classList.add('hidden');
+            fileName.classList.add('hidden');
+            uploadError.classList.add('hidden');
+            uploadError.textContent = '';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        selectPaymentMethod(document.querySelector('.payment-card.selected'));
+    });
+
+    lucide.createIcons();
+  </script>
+</body>
+</html>

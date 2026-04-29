@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              red: '#EF4444',
+              'red-hover': '#DC2626',
+              'red-light': '#FEF2F2',
+              dark: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-feature-settings: "cv11", "ss01"; }
+    .field { transition: box-shadow 0.2s ease, border-color 0.2s ease; }
+    .field:focus-within { border-color: #EF4444; box-shadow: 0 0 0 2px rgba(239,68,68,0.12); }
+    .avatar-frame { box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08); }
+  </style>
+</head>
+<body class="bg-slate-50 font-sans text-brand-dark min-h-screen">
+
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 h-14 flex items-center px-4 sm:px-8 shadow-sm">
+      <a href="/" class="flex items-center gap-2">
+        <div class="w-7 h-7 bg-brand-red rounded-md flex items-center justify-center">
+          <i data-lucide="cog" class="w-3.5 h-3.5 text-white"></i>
+        </div>
+        <span class="text-sm font-semibold text-brand-dark hidden sm:block">AutoPart<span class="text-brand-red">Center</span></span>
+      </a>
+      <div class="ml-auto flex items-center gap-3">
+        <a href="/users/pesanan" class="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-600" title="Lacak Pesanan">
+          <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+        </a>
+        <a href="/users/profile" class="w-10 h-10 flex items-center justify-center rounded-md bg-brand-red text-white" title="Profil">
+          <i data-lucide="user" class="w-5 h-5"></i>
+        </a>
+        <a href="/cart" class="relative w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-600" title="Keranjang">
+          <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+          <span id="cart-badge" class="absolute -top-1 -right-1 w-5 h-5 bg-brand-red text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white transition-all <%= cartCount > 0 ? 'scale-100' : 'scale-0' %>"><%= cartCount %></span>
+        </a>
+        <a href="/auth/logout" class="w-10 h-10 flex items-center justify-center rounded-md hover:bg-red-50 text-red-500" title="Logout">
+          <i data-lucide="log-out" class="w-5 h-5"></i>
+        </a>
+      </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="mb-6">
+      <%- include('../partials/back-button', { fallback: '/', wrapperClass: '' }) %>
+    </div>
+
+    <div class="grid lg:grid-cols-[320px_minmax(0,1fr)] gap-8">
+      <section class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div class="flex flex-col items-center text-center">
+          <div class="relative mb-5">
+            <img
+              id="avatar-preview"
+              src="<%= profile.avatar || '' %>"
+              alt="Avatar <%= profile.username %>"
+              class="avatar-frame w-28 h-28 rounded-full object-cover border-4 border-white <%= profile.avatar ? '' : 'hidden' %>"
+            >
+            <div id="avatar-fallback" class="avatar-frame w-28 h-28 rounded-full bg-slate-100 border-4 border-white flex items-center justify-center <%= profile.avatar ? 'hidden' : '' %>">
+              <i data-lucide="user" class="w-12 h-12 text-slate-400"></i>
+            </div>
+          </div>
+          <h1 class="text-xl font-bold text-brand-dark"><%= profile.username %></h1>
+          <p class="text-sm text-slate-500 mt-1"><%= profile.email %></p>
+          <p class="text-xs text-slate-400 mt-2">Avatar dan data akun bisa diperbarui dari form di sebelah kanan.</p>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold text-brand-dark">Profil Saya</h2>
+          <p class="mt-2 text-sm text-slate-500">Perbarui avatar, username, nomor kontak, alamat, dan password akun.</p>
+        </div>
+
+        <% if (messages && messages.error) { %>
+          <div class="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-md flex items-center gap-3">
+            <i data-lucide="alert-circle" class="w-4 h-4"></i>
+            <span><%= messages.error %></span>
+          </div>
+        <% } %>
+        <% if (messages && messages.success) { %>
+          <div class="mb-6 p-4 bg-green-50 border border-green-100 text-green-600 text-sm rounded-md flex items-center gap-3">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            <span><%= messages.success %></span>
+          </div>
+        <% } %>
+
+        <form action="/users/profile" method="POST" enctype="multipart/form-data" class="space-y-6">
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-brand-dark mb-2">Avatar</label>
+              <div class="field rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div class="flex items-center gap-3">
+                    <img id="upload-avatar-preview" src="" alt="Preview avatar" class="w-16 h-16 rounded-full object-cover border border-slate-200 hidden">
+                    <div id="upload-avatar-placeholder" class="w-16 h-16 rounded-full bg-white border border-slate-200 flex items-center justify-center">
+                      <i data-lucide="image-plus" class="w-6 h-6 text-slate-400"></i>
+                    </div>
+                  </div>
+                  <div class="flex-1">
+                    <input type="file" name="avatar" accept="image/*" id="avatar-input" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-white file:text-slate-700 hover:file:bg-slate-100" onchange="previewAvatar(this)">
+                    <p class="mt-2 text-[11px] text-slate-400">PNG, JPG, atau WebP.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label for="username" class="block text-sm font-medium text-brand-dark mb-2">Username</label>
+              <div class="field flex items-center border border-slate-200 rounded-xl bg-white h-12 px-4">
+                <i data-lucide="user" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <input name="username" id="username" type="text" value="<%= profile.username %>" class="flex-1 bg-transparent text-sm text-brand-dark placeholder-slate-400 ml-3 outline-none" required>
+              </div>
+            </div>
+
+            <div>
+              <label for="email" class="block text-sm font-medium text-brand-dark mb-2">Email</label>
+              <div class="field flex items-center border border-slate-200 rounded-xl bg-slate-50 h-12 px-4">
+                <i data-lucide="mail" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <input id="email" type="email" value="<%= profile.email %>" class="flex-1 bg-transparent text-sm text-slate-400 ml-3 outline-none" readonly>
+              </div>
+            </div>
+
+            <div>
+              <label for="whatsapp" class="block text-sm font-medium text-brand-dark mb-2">WhatsApp</label>
+              <div class="field flex items-center border border-slate-200 rounded-xl bg-white h-12 px-4">
+                <i data-lucide="phone" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <input name="whatsapp" id="whatsapp" type="tel" value="<%= profile.whatsapp || '' %>" class="flex-1 bg-transparent text-sm text-brand-dark placeholder-slate-400 ml-3 outline-none" placeholder="081234567890">
+              </div>
+            </div>
+
+            <div class="md:col-span-2">
+              <label for="alamat_lengkap" class="block text-sm font-medium text-brand-dark mb-2">Alamat Lengkap</label>
+              <div class="field border border-slate-200 rounded-xl bg-white px-4 pt-3 pb-3">
+                <textarea name="alamat_lengkap" id="alamat_lengkap" rows="4" class="w-full bg-transparent text-sm text-brand-dark placeholder-slate-400 outline-none leading-relaxed min-h-[96px]" placeholder="Tulis alamat lengkap Anda di sini"><%= profile.alamat_lengkap || '' %></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-100 pt-6">
+            <h3 class="text-sm font-semibold text-brand-dark mb-4">Ubah Password</h3>
+            <div class="grid md:grid-cols-3 gap-4">
+              <div>
+                <label for="current_password" class="block text-sm font-medium text-brand-dark mb-2">Password Saat Ini</label>
+                <div class="field flex items-center border border-slate-200 rounded-xl bg-white h-12 px-4">
+                  <i data-lucide="lock" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                  <input name="current_password" id="current_password" type="password" class="flex-1 bg-transparent text-sm text-brand-dark placeholder-slate-400 ml-3 outline-none" placeholder="Opsional">
+                </div>
+              </div>
+              <div>
+                <label for="new_password" class="block text-sm font-medium text-brand-dark mb-2">Password Baru</label>
+                <div class="field flex items-center border border-slate-200 rounded-xl bg-white h-12 px-4">
+                  <i data-lucide="key-round" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                  <input name="new_password" id="new_password" type="password" class="flex-1 bg-transparent text-sm text-brand-dark placeholder-slate-400 ml-3 outline-none" placeholder="Opsional">
+                </div>
+              </div>
+              <div>
+                <label for="confirm_password" class="block text-sm font-medium text-brand-dark mb-2">Konfirmasi Password</label>
+                <div class="field flex items-center border border-slate-200 rounded-xl bg-white h-12 px-4">
+                  <i data-lucide="shield-check" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                  <input name="confirm_password" id="confirm_password" type="password" class="flex-1 bg-transparent text-sm text-brand-dark placeholder-slate-400 ml-3 outline-none" placeholder="Opsional">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full md:w-auto inline-flex items-center justify-center h-12 px-6 bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-xl transition-colors">
+            Simpan Profil
+          </button>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    function previewAvatar(input) {
+      const preview = document.getElementById('avatar-preview');
+      const fallback = document.getElementById('avatar-fallback');
+      const uploadPreview = document.getElementById('upload-avatar-preview');
+      const uploadPlaceholder = document.getElementById('upload-avatar-placeholder');
+
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        if (!file.type.startsWith('image/')) {
+          input.value = '';
+          alert('Avatar harus berupa gambar.');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+          preview.classList.remove('hidden');
+          fallback.classList.add('hidden');
+
+          uploadPreview.src = e.target.result;
+          uploadPreview.classList.remove('hidden');
+          uploadPlaceholder.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    lucide.createIcons();
+  </script>
+  <%- include('../partials/cart-badge-sync') %>
+</body>
+</html>

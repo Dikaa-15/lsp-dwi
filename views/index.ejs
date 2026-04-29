@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              red: '#F87171',
+              'red-hover': '#EF4444',
+              'red-light': '#FEF2F2',
+              dark: '#1E293B',
+              'dark-hover': '#0F172A',
+            }
+          },
+          boxShadow: {
+            'card': '0 1px 3px 0 rgba(0,0,0,0.04), 0 1px 2px -1px rgba(0,0,0,0.04)',
+            'card-hover': '0 10px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04)',
+            'search': '0 2px 8px rgba(0,0,0,0.06)',
+            'header': '0 1px 3px rgba(0,0,0,0.05)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    html { scroll-behavior: smooth; }
+    .search-bar { transition: box-shadow 0.25s ease, border-color 0.25s ease; }
+    .search-bar:focus-within { box-shadow: 0 2px 12px rgba(248,113,113,0.15); border-color: #F87171; }
+    .product-card { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .product-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); }
+    .category-card { transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
+    .category-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -4px rgba(0,0,0,0.07); border-color: #F87171; }
+    .hero-overlay { background: linear-gradient(135deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.85) 45%, rgba(255,255,255,0.3) 100%); }
+    .badge-pulse { animation: badgePulse 2s ease-in-out infinite; }
+    @keyframes badgePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+  </style>
+</head>
+<body class="bg-white text-brand-dark font-sans">
+
+  <!-- ==================== HEADER ==================== -->
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <a href="/" class="flex items-center gap-2 shrink-0">
+          <div class="w-8 h-8 bg-brand-red rounded-md flex items-center justify-center">
+            <i data-lucide="cog" class="w-4 h-4 text-white"></i>
+          </div>
+          <span class="text-lg font-semibold text-brand-dark tracking-tight hidden sm:block">AutoPart<span class="text-brand-red">Center</span></span>
+        </a>
+
+        <!-- Nav -->
+        <nav class="hidden md:flex items-center gap-8">
+          <a href="#kategori" class="text-sm font-medium text-slate-500 hover:text-brand-dark transition-colors">Kategori</a>
+          <a href="#produk" class="text-sm font-medium text-slate-500 hover:text-brand-dark transition-colors">Produk</a>
+        </nav>
+
+        <!-- Search Bar -->
+        <form action="/" method="GET" class="hidden md:flex flex-1 max-w-xl mx-8">
+          <div class="search-bar w-full flex items-center border border-slate-200 rounded-md bg-slate-50/50 px-4 h-10">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
+            <input
+              type="text"
+              name="q"
+              value="<%= searchQuery || '' %>"
+              placeholder="Cari sparepart, kategori, atau brand..."
+              class="w-full bg-transparent text-sm text-brand-dark placeholder-slate-400 ml-3 outline-none"
+            >
+            <button type="submit" class="ml-3 text-xs font-semibold text-slate-500 hover:text-brand-red transition-colors">
+              Cari
+            </button>
+          </div>
+        </form>
+
+        <!-- Right Actions -->
+        <div class="flex items-center gap-4">
+          <% if (locals.user) { %>
+            <div class="flex flex-col items-end mr-2 hidden sm:flex">
+                <span class="text-xs font-semibold text-brand-dark"><%= user.username %></span>
+                <span class="text-[10px] text-slate-400 uppercase"><%= user.role %></span>
+            </div>
+
+            <a href="/users/pesanan" class="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-600" title="Lacak Pesanan">
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+            </a>
+
+            <a href="/users/profile" class="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-600" title="Profil">
+                <i data-lucide="user" class="w-5 h-5"></i>
+            </a>
+            
+            <a href="/cart" class="relative w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-600" title="Keranjang">
+                <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                <span id="cart-badge" class="absolute -top-1 -right-1 w-5 h-5 bg-brand-red text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white transition-all <%= cartCount > 0 ? 'scale-100' : 'scale-0' %>">
+                    <%= cartCount %>
+                </span>
+            </a>
+
+            <% if (user.role === 'admin') { %>
+                <a href="/admin/dashboard" class="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-600" title="Dashboard">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                </a>
+            <% } %>
+            <a href="/auth/logout" class="w-10 h-10 flex items-center justify-center rounded-md hover:bg-red-50 text-red-500" title="Logout">
+              <i data-lucide="log-out" class="w-5 h-5"></i>
+            </a>
+          <% } else { %>
+            <a href="/auth/login" class="text-sm font-semibold text-slate-600 hover:text-brand-red transition-colors">Masuk</a>
+            <a href="/auth/register" class="px-4 py-2 bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-md transition-colors">Daftar</a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== HERO SECTION ==================== -->
+  <section class="relative overflow-hidden bg-slate-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid lg:grid-cols-2 min-h-[480px]">
+        <div class="flex flex-col justify-center py-16 lg:py-0 lg:pr-16 relative z-10">
+          <span class="inline-flex items-center px-3 py-1 bg-brand-red/10 text-brand-red text-xs font-semibold rounded-md w-fit mb-6">
+            <i data-lucide="zap" class="w-3 h-3 mr-1.5"></i>
+            Promo Minggu Ini
+          </span>
+          <h1 class="text-4xl sm:text-5xl lg:text-[3.5rem] font-bold text-brand-dark leading-[1.1] tracking-tight">
+            Suku Cadang Asli,<br>
+            <span class="text-brand-red">Performa Terbaik</span>
+          </h1>
+          <p class="mt-6 text-base text-slate-500 leading-relaxed max-w-md">
+            Temukan ribuan sparepart mobil dan motor berkualitas OEM. Pengiriman cepat ke seluruh Indonesia dengan garansi keaslian 100%.
+          </p>
+          <div class="flex items-center gap-4 mt-8">
+            <a href="#produk" class="inline-flex items-center px-6 py-3 bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-md transition-colors">
+              Jelajahi Produk
+              <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
+            </a>
+            <a href="#kategori" class="inline-flex items-center px-6 py-3 border border-slate-200 text-brand-dark text-sm font-medium rounded-md hover:bg-slate-50 transition-colors">
+              Lihat Kategori
+            </a>
+          </div>
+        </div>
+
+        <div class="relative hidden lg:block">
+          <div class="absolute inset-0 hero-overlay z-[1]"></div>
+          <img src="/assets/b92c408533ef22fa360838d18d6014e6.jpg" alt="Sparepart otomotif dan pelumas" class="w-full h-full object-cover">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== KATEGORI GRID ==================== -->
+  <section id="kategori" class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-2xl font-bold text-brand-dark tracking-tight">Jelajahi Kategori</h2>
+        <p class="mt-2 text-sm text-slate-500">Temukan suku cadang berdasarkan jenis kendaraan atau komponen</p>
+      </div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <% categories.forEach(cat => { %>
+          <div class="category-card group flex flex-col items-center p-8 border border-slate-100 rounded-md bg-white cursor-pointer text-center">
+            <div class="w-16 h-16 bg-slate-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-brand-red-light transition-colors">
+              <i data-lucide="package" class="w-8 h-8 text-slate-400 group-hover:text-brand-red transition-colors"></i>
+            </div>
+            <h3 class="text-sm font-semibold text-brand-dark"><%= cat.nama_kategori %></h3>
+          </div>
+        <% }) %>
+        <% if (categories.length === 0) { %>
+            <div class="col-span-full py-10 text-center text-slate-400">Belum ada kategori.</div>
+        <% } %>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FEATURED PRODUCTS ==================== -->
+  <section id="produk" class="py-16 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-10">
+        <div>
+          <h2 class="text-2xl font-bold text-brand-dark tracking-tight">Produk Unggulan</h2>
+          <p class="mt-2 text-sm text-slate-500">Sparepart terpopuler pilihan pelanggan kami</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <% products.forEach(p => { %>
+          <a href="/produk/<%= p.kode_produk %>" class="product-card bg-white rounded-md border border-slate-100 shadow-card overflow-hidden block">
+            <div class="relative aspect-square bg-slate-50 overflow-hidden">
+              <img src="<%= p.gambar || 'https://via.placeholder.com/400?text=' + p.nama_produk %>" alt="<%= p.nama_produk %>" class="w-full h-full object-contain mix-blend-multiply">
+            </div>
+            <div class="p-4">
+              <span class="inline-block px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-medium rounded mb-2"><%= p.nama_brand %></span>
+              <h3 class="text-sm font-semibold text-brand-dark leading-snug line-clamp-2 min-h-[2.5rem]"><%= p.nama_produk %></h3>
+              <div class="mt-3">
+                <span class="text-base font-bold text-brand-dark">Rp<%= p.harga.toLocaleString('id-ID') %></span>
+              </div>
+            </div>
+          </a>
+        <% }) %>
+        <% if (products.length === 0) { %>
+            <div class="col-span-full py-20 text-center text-slate-400">Belum ada produk tersedia.</div>
+        <% } %>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="bg-slate-50 border-t border-slate-100 py-12">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+      <p class="text-xs text-slate-400">&copy; 2026 AutoPart Center. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    lucide.createIcons();
+  </script>
+  <%- include('partials/cart-badge-sync') %>
+</body>
+</html>

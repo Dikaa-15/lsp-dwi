@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoPart Center — Suku Cadang Otomotif Terpercaya</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              red: '#F87171',
+              'red-hover': '#EF4444',
+              'red-light': '#FEF2F2',
+              dark: '#1E293B',
+              'dark-hover': '#0F172A',
+            }
+          },
+          boxShadow: {
+            'card': '0 1px 3px 0 rgba(0,0,0,0.04), 0 1px 2px -1px rgba(0,0,0,0.04)',
+            'card-hover': '0 10px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04)',
+            'search': '0 2px 8px rgba(0,0,0,0.06)',
+            'header': '0 1px 3px rgba(0,0,0,0.05)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    html { scroll-behavior: smooth; }
+    body { font-feature-settings: "cv11", "ss01"; }
+
+    /* 8pt grid alignment helpers */
+    .grid-8 { gap: 8px; }
+    .grid-16 { gap: 16px; }
+    .grid-24 { gap: 24px; }
+    .grid-32 { gap: 32px; }
+    .grid-40 { gap: 40px; }
+
+    /* Search focus animation */
+    .search-bar { transition: box-shadow 0.25s ease, border-color 0.25s ease; }
+    .search-bar:focus-within {
+      box-shadow: 0 2px 12px rgba(248,113,113,0.15);
+      border-color: #F87171;
+    }
+
+    /* Card hover */
+    .product-card {
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                  box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
+    }
+    .product-card:hover .btn-detail {
+      background-color: #F87171;
+      color: #FFFFFF;
+      border-color: #F87171;
+    }
+
+    /* Category card hover */
+    .category-card {
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .category-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px -4px rgba(0,0,0,0.07);
+      border-color: #F87171;
+    }
+    .category-card:hover .cat-icon {
+      color: #F87171;
+    }
+
+    /* Toast notification */
+    .toast {
+      animation: toastIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .toast-out {
+      animation: toastOut 0.3s ease forwards;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(16px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(16px) scale(0.96); }
+    }
+
+    /* Subtle hero gradient overlay */
+    .hero-overlay {
+      background: linear-gradient(135deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.85) 45%, rgba(255,255,255,0.3) 100%);
+    }
+
+    /* Badge pulse */
+    @keyframes badgePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+    .badge-pulse { animation: badgePulse 2s ease-in-out infinite; }
+
+    /* Promotion ribbon */
+    .promo-ribbon {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 2;
+    }
+
+    /* Scrollbar subtle */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #F8FAFC; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+    /* Mobile nav */
+    .mobile-menu {
+      transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s;
+    }
+    .mobile-menu.hidden-menu {
+      opacity: 0;
+      transform: translateY(-8px);
+      visibility: hidden;
+    }
+    .mobile-menu.visible-menu {
+      opacity: 1;
+      transform: translateY(0);
+      visibility: visible;
+    }
+
+    /* No result state */
+    .no-result { display: none; }
+    .no-result.show { display: flex; }
+  </style>
+</head>
+<body class="bg-white text-brand-dark font-sans">
+
+  <!-- ==================== TOAST CONTAINER ==================== -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-[100] flex flex-col grid-8 items-end"></div>
+
+  <!-- ==================== STICKY HEADER ==================== -->
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      <!-- Main header -->
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <a href="#" class="flex items-center grid-8 shrink-0">
+          <div class="w-8 h-8 bg-brand-red rounded-md flex items-center justify-center">
+            <i data-lucide="cog" class="w-4 h-4 text-white"></i>
+          </div>
+          <span class="text-lg font-semibold text-brand-dark tracking-tight hidden sm:block">AutoPart<span class="text-brand-red">Center</span></span>
+        </a>
+
+        <!-- Desktop Nav Links -->
+        <nav class="hidden md:flex items-center grid-32">
+          <a href="#kategori" class="text-sm font-medium text-slate-500 hover:text-brand-dark transition-colors duration-200">Kategori</a>
+          <a href="#" class="text-sm font-medium text-slate-500 hover:text-brand-dark transition-colors duration-200">Brands</a>
+          <a href="#" class="text-sm font-medium text-slate-500 hover:text-brand-dark transition-colors duration-200">About Us</a>
+        </nav>
+
+        <!-- Search Bar (Desktop) -->
+        <div class="hidden md:flex flex-1 max-w-xl mx-8">
+          <div class="search-bar w-full flex items-center border border-slate-200 rounded-md bg-slate-50/50 px-4 h-10">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
+            <input
+              id="search-desktop"
+              type="text"
+              placeholder="Cari Sparepart..."
+              class="w-full bg-transparent text-sm text-brand-dark placeholder-slate-400 ml-3 outline-none"
+              oninput="handleSearch(this.value)"
+            >
+            <kbd class="hidden lg:inline-flex items-center px-2 py-0.5 text-[10px] font-medium text-slate-400 bg-white border border-slate-200 rounded">⌘K</kbd>
+          </div>
+        </div>
+
+        <!-- Right Actions -->
+        <div class="flex items-center grid-8">
+          <!-- Mobile Search Toggle -->
+          <button id="mobile-search-toggle" class="md:hidden w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-50 transition-colors">
+            <i data-lucide="search" class="w-5 h-5 text-slate-600"></i>
+          </button>
+
+          <!-- Cart -->
+          <button id="cart-btn" class="relative w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-50 transition-colors">
+            <i data-lucide="shopping-cart" class="w-5 h-5 text-slate-600"></i>
+            <span id="cart-badge" class="badge-pulse absolute -top-0.5 -right-0.5 w-5 h-5 bg-brand-red text-white text-[10px] font-semibold rounded-full flex items-center justify-center">0</span>
+          </button>
+
+          <!-- Profile -->
+          <button class="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-50 transition-colors">
+            <i data-lucide="user" class="w-5 h-5 text-slate-600"></i>
+          </button>
+
+          <!-- Mobile Menu Toggle -->
+          <button id="mobile-menu-toggle" class="md:hidden w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-50 transition-colors">
+            <i data-lucide="menu" class="w-5 h-5 text-slate-600"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Search Bar (expandable) -->
+      <div id="mobile-search" class="md:hidden overflow-hidden max-h-0 transition-all duration-300">
+        <div class="pb-3">
+          <div class="search-bar w-full flex items-center border border-slate-200 rounded-md bg-slate-50/50 px-4 h-10">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
+            <input
+              type="text"
+              placeholder="Cari Sparepart..."
+              class="w-full bg-transparent text-sm text-brand-dark placeholder-slate-400 ml-3 outline-none"
+              oninput="handleSearch(this.value)"
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div id="mobile-menu" class="mobile-menu hidden-menu md:hidden border-t border-slate-50">
+        <div class="py-4 grid-8">
+          <a href="#kategori" class="block px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-md">Kategori</a>
+          <a href="#" class="block px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-md">Brands</a>
+          <a href="#" class="block px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-md">About Us</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== HERO SECTION ==================== -->
+  <section class="relative overflow-hidden bg-slate-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid lg:grid-cols-2 min-h-[480px] lg:min-h-[520px]">
+        <!-- Text Side -->
+        <div class="flex flex-col justify-center py-16 lg:py-0 lg:pr-16 relative z-10">
+          <span class="inline-flex items-center px-3 py-1 bg-brand-red/10 text-brand-red text-xs font-semibold rounded-md w-fit mb-6">
+            <i data-lucide="zap" class="w-3 h-3 mr-1.5"></i>
+            Promo Minggu Ini
+          </span>
+          <h1 class="text-4xl sm:text-5xl lg:text-[3.5rem] font-bold text-brand-dark leading-[1.1] tracking-tight">
+            Suku Cadang Asli,<br>
+            <span class="text-brand-red">Performa Terbaik</span>
+          </h1>
+          <p class="mt-6 text-base sm:text-lg text-slate-500 leading-relaxed max-w-md">
+            Temukan ribuan sparepart mobil dan motor berkualitas OEM. Pengiriman cepat ke seluruh Indonesia dengan garansi keaslian 100%.
+          </p>
+          <div class="flex items-center grid-16 mt-8">
+            <a href="#produk" class="inline-flex items-center px-6 py-3 bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-md transition-colors duration-200">
+              Jelajahi Produk
+              <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
+            </a>
+            <a href="#kategori" class="inline-flex items-center px-6 py-3 border border-slate-200 text-brand-dark text-sm font-medium rounded-md hover:bg-slate-50 transition-colors duration-200">
+              Lihat Kategori
+            </a>
+          </div>
+          <!-- Trust indicators -->
+          <div class="flex items-center grid-24 mt-10 pt-8 border-t border-slate-200/60">
+            <div class="flex items-center grid-8">
+              <i data-lucide="shield-check" class="w-5 h-5 text-slate-400"></i>
+              <span class="text-xs text-slate-500 font-medium">Garansi Asli</span>
+            </div>
+            <div class="flex items-center grid-8">
+              <i data-lucide="truck" class="w-5 h-5 text-slate-400"></i>
+              <span class="text-xs text-slate-500 font-medium">Gratis Ongkir</span>
+            </div>
+            <div class="flex items-center grid-8">
+              <i data-lucide="rotate-ccw" class="w-5 h-5 text-slate-400"></i>
+              <span class="text-xs text-slate-500 font-medium">30 Hari Retur</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Image Side -->
+        <div class="relative hidden lg:block">
+          <div class="absolute inset-0 hero-overlay z-[1]"></div>
+          <img
+            src="https://picsum.photos/seed/auto-engine-detail/900/600.jpg"
+            alt="Modern Engine"
+            class="w-full h-full object-cover"
+          >
+          <!-- Floating stat card -->
+          <div class="absolute bottom-8 left-8 z-[2] bg-white/95 backdrop-blur-sm rounded-lg p-5 shadow-card-hover border border-white/50 max-w-[220px]">
+            <div class="flex items-center grid-8 mb-3">
+              <div class="w-8 h-8 bg-brand-red/10 rounded-md flex items-center justify-center">
+                <i data-lucide="package" class="w-4 h-4 text-brand-red"></i>
+              </div>
+              <span class="text-xs font-semibold text-slate-500">TERJUAL</span>
+            </div>
+            <p class="text-2xl font-bold text-brand-dark">12,500+</p>
+            <p class="text-xs text-slate-400 mt-0.5">Suku cadang bulan ini</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== KATEGORI GRID ==================== -->
+  <section id="kategori" class="py-16 sm:py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Section Header -->
+      <div class="text-center mb-12">
+        <h2 class="text-2xl sm:text-3xl font-bold text-brand-dark tracking-tight">Jelajahi Kategori</h2>
+        <p class="mt-2 text-sm text-slate-500">Temukan suku cadang berdasarkan jenis kendaraan atau komponen</p>
+      </div>
+
+      <!-- Category Grid -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 grid-16 sm:grid-24">
+        <!-- Mobil -->
+        <button onclick="filterCategory('mobil')" class="category-card group flex flex-col items-center p-6 sm:p-8 border border-slate-100 rounded-md bg-white cursor-pointer text-center">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 bg-slate-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-brand-red-light transition-colors duration-200">
+            <i data-lucide="car" class="w-7 h-7 sm:w-8 sm:h-8 text-slate-400 cat-icon transition-colors duration-200"></i>
+          </div>
+          <h3 class="text-sm font-semibold text-brand-dark">Suku Cadang Mobil</h3>
+          <p class="text-xs text-slate-400 mt-1">2,400+ produk</p>
+        </button>
+
+        <!-- Motor -->
+        <button onclick="filterCategory('motor')" class="category-card group flex flex-col items-center p-6 sm:p-8 border border-slate-100 rounded-md bg-white cursor-pointer text-center">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 bg-slate-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-brand-red-light transition-colors duration-200">
+            <i data-lucide="bike" class="w-7 h-7 sm:w-8 sm:h-8 text-slate-400 cat-icon transition-colors duration-200"></i>
+          </div>
+          <h3 class="text-sm font-semibold text-brand-dark">Suku Cadang Motor</h3>
+          <p class="text-xs text-slate-400 mt-1">1,800+ produk</p>
+        </button>
+
+        <!-- Mesin & Perawatan -->
+        <button onclick="filterCategory('mesin')" class="category-card group flex flex-col items-center p-6 sm:p-8 border border-slate-100 rounded-md bg-white cursor-pointer text-center">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 bg-slate-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-brand-red-light transition-colors duration-200">
+            <i data-lucide="filter" class="w-7 h-7 sm:w-8 sm:h-8 text-slate-400 cat-icon transition-colors duration-200"></i>
+          </div>
+          <h3 class="text-sm font-semibold text-brand-dark">Mesin & Perawatan</h3>
+          <p class="text-xs text-slate-400 mt-1">950+ produk</p>
+        </button>
+
+        <!-- Kelistrikan -->
+        <button onclick="filterCategory('kelistrikan')" class="category-card group flex flex-col items-center p-6 sm:p-8 border border-slate-100 rounded-md bg-white cursor-pointer text-center">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 bg-slate-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-brand-red-light transition-colors duration-200">
+            <i data-lucide="zap" class="w-7 h-7 sm:w-8 sm:h-8 text-slate-400 cat-icon transition-colors duration-200"></i>
+          </div>
+          <h3 class="text-sm font-semibold text-brand-dark">Kelistrikan</h3>
+          <p class="text-xs text-slate-400 mt-1">620+ produk</p>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FEATURED PRODUCTS ==================== -->
+  <section id="produk" class="py-16 sm:py-20 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Section Header -->
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-10">
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-bold text-brand-dark tracking-tight">Produk Unggulan</h2>
+          <p class="mt-2 text-sm text-slate-500">Sparepart terpopuler pilihan pelanggan kami</p>
+        </div>
+        <div class="flex items-center grid-8 mt-4 sm:mt-0">
+          <button onclick="filterCategory('all')" class="filter-btn active px-3 py-1.5 text-xs font-medium rounded-md border border-slate-200 bg-white text-slate-600 hover:border-brand-red hover:text-brand-red transition-colors" data-filter="all">Semua</button>
+          <button onclick="filterCategory('mobil')" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-md border border-slate-200 bg-white text-slate-600 hover:border-brand-red hover:text-brand-red transition-colors" data-filter="mobil">Mobil</button>
+          <button onclick="filterCategory('motor')" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-md border border-slate-200 bg-white text-slate-600 hover:border-brand-red hover:text-brand-red transition-colors" data-filter="motor">Motor</button>
+        </div>
+      </div>
+
+      <!-- Product Grid -->
+      <div id="product-grid" class="grid grid-cols-2 lg:grid-cols-4 grid-16 sm:grid-24">
+        <!-- Products will be injected by JS -->
+      </div>
+
+      <!-- No Result State -->
+      <div id="no-result" class="no-result flex-col items-center justify-center py-20 text-center">
+        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+          <i data-lucide="search-x" class="w-7 h-7 text-slate-300"></i>
+        </div>
+        <p class="text-sm font-medium text-slate-500">Produk tidak ditemukan</p>
+        <p class="text-xs text-slate-400 mt-1">Coba kata kunci lain atau reset filter</p>
+        <button onclick="filterCategory('all'); clearSearch();" class="mt-4 text-xs font-medium text-brand-red hover:underline">Reset Filter</button>
+      </div>
+
+      <!-- Load More -->
+      <div class="text-center mt-12">
+        <button class="inline-flex items-center px-8 py-3 border border-slate-200 text-sm font-medium text-slate-600 rounded-md hover:bg-white hover:border-slate-300 transition-all duration-200">
+          Lihat Semua Produk
+          <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PROMO BANNER ==================== -->
+  <section class="py-16 sm:py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="relative overflow-hidden bg-brand-dark rounded-lg p-8 sm:p-12 lg:p-16">
+        <!-- Decorative elements -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-brand-red/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 bg-brand-red/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl"></div>
+
+        <div class="relative z-10 max-w-xl">
+          <span class="inline-flex items-center px-3 py-1 bg-brand-red/20 text-brand-red text-xs font-semibold rounded-md mb-4">
+            <i data-lucide="percent" class="w-3 h-3 mr-1.5"></i>
+            Penawaran Terbatas
+          </span>
+          <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight leading-tight">
+            Diskon Hingga <span class="text-brand-red">30%</span> untuk Brake Pad Premium
+          </h2>
+          <p class="mt-4 text-sm text-slate-400 leading-relaxed max-w-md">
+            Berlaku untuk semua merek brake pad OEM dan aftermarket. Segera sebelum stok habis! Periode promo sampai akhir bulan ini.
+          </p>
+          <div class="flex items-center grid-16 mt-8">
+            <a href="#produk" class="inline-flex items-center px-6 py-3 bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-md transition-colors duration-200">
+              Belanja Sekarang
+              <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
+            </a>
+            <div class="flex items-center grid-8 text-slate-400">
+              <i data-lucide="clock" class="w-4 h-4"></i>
+              <span id="countdown" class="text-sm font-medium tabular-nums">7d 14h 32m</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="bg-slate-50 border-t border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+      <div class="grid grid-cols-2 md:grid-cols-4 grid-32">
+        <!-- Brand -->
+        <div class="col-span-2 md:col-span-1">
+          <div class="flex items-center grid-8 mb-4">
+            <div class="w-8 h-8 bg-brand-red rounded-md flex items-center justify-center">
+              <i data-lucide="cog" class="w-4 h-4 text-white"></i>
+            </div>
+            <span class="text-lg font-semibold text-brand-dark tracking-tight">AutoPart<span class="text-brand-red">Center</span></span>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed max-w-xs">
+            Toko suku cadang otomotif terpercaya sejak 2015. Menyediakan sparepart asli dan aftermarket untuk semua jenis kendaraan.
+          </p>
+          <!-- Social -->
+          <div class="flex items-center grid-8 mt-6">
+            <a href="#" class="w-8 h-8 flex items-center justify-center rounded-md bg-white border border-slate-200 hover:border-brand-red hover:text-brand-red text-slate-400 transition-colors">
+              <i data-lucide="instagram" class="w-3.5 h-3.5"></i>
+            </a>
+            <a href="#" class="w-8 h-8 flex items-center justify-center rounded-md bg-white border border-slate-200 hover:border-brand-red hover:text-brand-red text-slate-400 transition-colors">
+              <i data-lucide="facebook" class="w-3.5 h-3.5"></i>
+            </a>
+            <a href="#" class="w-8 h-8 flex items-center justify-center rounded-md bg-white border border-slate-200 hover:border-brand-red hover:text-brand-red text-slate-400 transition-colors">
+              <i data-lucide="youtube" class="w-3.5 h-3.5"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Hubungi Kami -->
+        <div>
+          <h4 class="text-xs font-semibold text-brand-dark uppercase tracking-wider mb-4">Hubungi Kami</h4>
+          <ul class="space-y-3">
+            <li class="flex items-center grid-8 text-xs text-slate-500">
+              <i data-lucide="phone" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+              0812-3456-7890
+            </li>
+            <li class="flex items-center grid-8 text-xs text-slate-500">
+              <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+              info@autopartcenter.id
+            </li>
+            <li class="flex items-start grid-8 text-xs text-slate-500">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5"></i>
+              Jl. Otomotif Raya No. 88, Jakarta Selatan
+            </li>
+            <li>
+              <a href="#" class="inline-flex items-center grid-8 text-xs font-medium text-green-600 hover:text-green-700 transition-colors">
+                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+                WhatsApp Support
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- FAQ & Bantuan -->
+        <div>
+          <h4 class="text-xs font-semibold text-brand-dark uppercase tracking-wider mb-4">Bantuan</h4>
+          <ul class="space-y-3">
+            <li><a href="#" class="text-xs text-slate-500 hover:text-brand-dark transition-colors">FAQ</a></li>
+            <li><a href="#" class="text-xs text-slate-500 hover:text-brand-dark transition-colors">Cara Pemesanan</a></li>
+            <li><a href="#" class="text-xs text-slate-500 hover:text-brand-dark transition-colors">Kebijakan Pengembalian</a></li>
+            <li><a href="#" class="text-xs text-slate-500 hover:text-brand-dark transition-colors">Cek Pesanan</a></li>
+            <li><a href="#" class="text-xs text-slate-500 hover:text-brand-dark transition-colors">Panduan Pemasangan</a></li>
+          </ul>
+        </div>
+
+        <!-- Pembayaran -->
+        <div>
+          <h4 class="text-xs font-semibold text-brand-dark uppercase tracking-wider mb-4">Metode Pembayaran</h4>
+          <div class="grid grid-cols-3 grid-8 mb-6">
+            <div class="h-8 bg-white border border-slate-200 rounded-md flex items-center justify-center">
+              <span class="text-[9px] font-bold text-slate-400">BCA</span>
+            </div>
+            <div class="h-8 bg-white border border-slate-200 rounded-md flex items-center justify-center">
+              <span class="text-[9px] font-bold text-slate-400">BRI</span>
+            </div>
+            <div class="h-8 bg-white border border-slate-200 rounded-md flex items-center justify-center">
+              <span class="text-[9px] font-bold text-slate-400">Mandiri</span>
+            </div>
+            <div class="h-8 bg-white border border-slate-200 rounded-md flex items-center justify-center">
+              <span class="text-[9px] font-bold text-slate-400">BNI</span>
+            </div>
+            <div class="h-8 bg-white border border-slate-200 rounded-md flex items-center justify-center">
+              <span class="text-[8px] font-bold text-slate-400">OVO</span>
+            </div>
+            <div class="h-8 bg-white border border-slate-200 rounded-md flex items-center justify-center">
+              <span class="text-[8px] font-bold text-slate-400">DANA</span>
+            </div>
+          </div>
+          <h4 class="text-xs font-semibold text-brand-dark uppercase tracking-wider mb-3">Pengiriman</h4>
+          <div class="grid grid-cols-3 grid-8">
+            <div class="h-8 bg-white border border-slate-200 rounded-md flex items-center justify-center">
+              <span class="text-[8px] font-bold text-slate-400">JNE</span>
+            </div>
+            <div class="h-8 bg-white border border-slate-200 rounded-md flex items-center justify-center">
+              <span class="text-[7px] font-bold text-slate-400">J&T</span>
+            </div>
+            <div class="h-8 bg-white border border-slate-200 rounded-md flex items-center justify-center">
+              <span class="text-[7px] font-bold text-slate-400">SiCepat</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom bar -->
+      <div class="mt-12 pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between grid-16">
+        <p class="text-xs text-slate-400">&copy; 2025 AutoPart Center. All rights reserved.</p>
+        <div class="flex items-center grid-16">
+          <a href="#" class="text-xs text-slate-400 hover:text-slate-600 transition-colors">Syarat & Ketentuan</a>
+          <a href="#" class="text-xs text-slate-400 hover:text-slate-600 transition-colors">Kebijakan Privasi</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== JAVASCRIPT ==================== -->
+  <script>
+    // ---- Product Data ----
+    const products = [
+      {
+        id: 1,
+        name: "Brake Pad Set Depan - Bendix",
+        category: "mobil",
+        subCategory: "mesin",
+        price: 485000,
+        originalPrice: 550000,
+        image: "https://picsum.photos/seed/brakepad-set/400/400.jpg",
+        promo: true
+      },
+      {
+        id: 2,
+        name: "Oil Filter Denso - Toyota Avanza",
+        category: "mobil",
+        subCategory: "mesin",
+        price: 65000,
+        originalPrice: null,
+        image: "https://picsum.photos/seed/oilfilter-denso/400/400.jpg",
+        promo: false
+      },
+      {
+        id: 3,
+        name: "Busi NGK Iridium - Honda Vario",
+        category: "motor",
+        subCategory: "mesin",
+        price: 95000,
+        originalPrice: 120000,
+        image: "https://picsum.photos/seed/busi-ngk-iridium/400/400.jpg",
+        promo: true
+      },
+      {
+        id: 4,
+        name: "Rantai Keteng Set - Yamaha NMAX",
+        category: "motor",
+        subCategory: "mesin",
+        price: 275000,
+        originalPrice: null,
+        image: "https://picsum.photos/seed/rantai-keteng-nmax/400/400.jpg",
+        promo: false
+      },
+      {
+        id: 5,
+        name: "Aki GS Astra 45Ah - Mobil",
+        category: "mobil",
+        subCategory: "kelistrikan",
+        price: 720000,
+        originalPrice: 850000,
+        image: "https://picsum.photos/seed/aki-gs-astra/400/400.jpg",
+        promo: true
+      },
+      {
+        id: 6,
+        name: "Radiator Assy - Mitsubishi Xpander",
+        category: "mobil",
+        subCategory: "mesin",
+        price: 1250000,
+        originalPrice: null,
+        image: "https://picsum.photos/seed/radiator-xpander/400/400.jpg",
+        promo: false
+      },
+      {
+        id: 7,
+        name: "Disc Brake Depan - Honda Beat",
+        category: "motor",
+        subCategory: "mesin",
+        price: 185000,
+        originalPrice: 220000,
+        image: "https://picsum.photos/seed/disc-brake-beat/400/400.jpg",
+        promo: true
+      },
+      {
+        id: 8,
+        name: "Air Filter Racing - Nissin Universal",
+        category: "motor",
+        subCategory: "mesin",
+        price: 155000,
+        originalPrice: null,
+        image: "https://picsum.photos/seed/airfilter-racing/400/400.jpg",
+        promo: false
+      }
+    ];
+
+    let cartCount = 0;
+    let activeFilter = 'all';
+    let searchQuery = '';
+
+    // ---- Format Currency ----
+    function formatPrice(price) {
+      return 'Rp' + price.toLocaleString('id-ID');
+    }
+
+    // ---- Render Products ----
+    function renderProducts() {
+      const grid = document.getElementById('product-grid');
+      const noResult = document.getElementById('no-result');
+
+      let filtered = products;
+
+      if (activeFilter !== 'all') {
+        if (activeFilter === 'mesin' || activeFilter === 'kelistrikan') {
+          filtered = filtered.filter(p => p.subCategory === activeFilter);
+        } else {
+          filtered = filtered.filter(p => p.category === activeFilter);
+        }
+      }
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        filtered = filtered.filter(p =>
+          p.name.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q)
+        );
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        noResult.classList.add('show');
+        return;
+      }
+
+      noResult.classList.remove('show');
+
+      grid.innerHTML = filtered.map(p => `
+        <div class="product-card bg-white rounded-md border border-slate-100 shadow-card overflow-hidden" data-category="${p.category}" data-sub="${p.subCategory}">
+          <div class="relative aspect-square bg-slate-50 overflow-hidden">
+            ${p.promo ? `<div class="promo-ribbon"><span class="inline-flex items-center px-2 py-0.5 bg-brand-red text-white text-[10px] font-semibold rounded">Promo</span></div>` : ''}
+            <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" loading="lazy">
+          </div>
+          <div class="p-4">
+            <span class="inline-block px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-medium rounded mb-2">${p.category === 'mobil' ? 'Mobil' : 'Motor'}</span>
+            <h3 class="text-sm font-semibold text-brand-dark leading-snug line-clamp-2 min-h-[2.5rem]">${p.name}</h3>
+            <div class="mt-3 flex items-baseline grid-8">
+              <span class="text-base font-bold text-brand-dark">${formatPrice(p.price)}</span>
+              ${p.originalPrice ? `<span class="text-xs text-slate-400 line-through">${formatPrice(p.originalPrice)}</span>` : ''}
+            </div>
+            <div class="flex items-center grid-8 mt-4">
+              <button onclick="addToCart('${p.name}')" class="btn-detail flex-1 inline-flex items-center justify-center px-3 py-2 border-2 border-brand-red text-brand-red text-xs font-semibold rounded-md transition-all duration-200 hover:bg-brand-red hover:text-white">
+                <i data-lucide="shopping-cart" class="w-3.5 h-3.5 mr-1.5"></i>
+                Tambah
+              </button>
+              <button onclick="viewDetail('${p.name}')" class="btn-detail w-9 h-9 flex items-center justify-center border-2 border-slate-200 text-slate-400 rounded-md transition-all duration-200 hover:border-brand-red hover:text-brand-red">
+                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    // ---- Filter Category ----
+    function filterCategory(cat) {
+      activeFilter = cat;
+
+      // Update filter button states
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active', 'border-brand-red', 'text-brand-red', 'bg-brand-red-light');
+        btn.classList.add('border-slate-200', 'text-slate-600');
+      });
+      const activeBtn = document.querySelector(`.filter-btn[data-filter="${cat}"]`);
+      if (activeBtn) {
+        activeBtn.classList.add('active', 'border-brand-red', 'text-brand-red', 'bg-brand-red-light');
+        activeBtn.classList.remove('border-slate-200', 'text-slate-600');
+      }
+
+      renderProducts();
+    }
+
+    // ---- Search ----
+    function handleSearch(value) {
+      searchQuery = value;
+      renderProducts();
+    }
+
+    function clearSearch() {
+      searchQuery = '';
+      const desktopInput = document.getElementById('search-desktop');
+      if (desktopInput) desktopInput.value = '';
+    }
+
+    // ---- Cart ----
+    function addToCart(name) {
+      cartCount++;
+      document.getElementById('cart-badge').textContent = cartCount;
+      showToast(`"${name}" ditambahkan ke keranjang`, 'success');
+    }
+
+    // ---- View Detail ----
+    function viewDetail(name) {
+      showToast(`Membuka detail: ${name}`, 'info');
+    }
+
+    // ---- Toast ----
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      const bgColor = type === 'success' ? 'bg-green-600' : 'bg-brand-dark';
+      const icon = type === 'success' ? 'check-circle' : 'info';
+
+      toast.className = `toast flex items-center grid-8 px-4 py-3 ${bgColor} text-white text-sm font-medium rounded-md shadow-lg max-w-sm`;
+      toast.innerHTML = `
+        <i data-lucide="${icon}" class="w-4 h-4 shrink-0"></i>
+        <span class="leading-snug">${message}</span>
+      `;
+
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      setTimeout(() => {
+        toast.classList.add('toast-out');
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+
+    // ---- Mobile Menu Toggle ----
+    document.getElementById('mobile-menu-toggle')?.addEventListener('click', () => {
+      const menu = document.getElementById('mobile-menu');
+      menu.classList.toggle('hidden-menu');
+      menu.classList.toggle('visible-menu');
+    });
+
+    // ---- Mobile Search Toggle ----
+    document.getElementById('mobile-search-toggle')?.addEventListener('click', () => {
+      const search = document.getElementById('mobile-search');
+      if (search.style.maxHeight && search.style.maxHeight !== '0px') {
+        search.style.maxHeight = '0px';
+      } else {
+        search.style.maxHeight = '80px';
+        search.querySelector('input').focus();
+      }
+    });
+
+    // ---- Keyboard Shortcut ⌘K ----
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        const input = document.getElementById('search-desktop');
+        if (input) input.focus();
+      }
+    });
+
+    // ---- Countdown Timer (simple demo) ----
+    function updateCountdown() {
+      const now = new Date();
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      const diff = end - now;
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      document.getElementById('countdown').textContent = `${d}d ${h}h ${m}m ${s}s`;
+    }
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    // ---- Init ----
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      renderProducts();
+      filterCategory('all');
+    });
+  </script>
+</body>
+</html>

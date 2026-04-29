@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — AutoPart Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              red: '#EF4444',
+              'red-hover': '#DC2626',
+              'red-light': '#FEF2F2',
+              dark: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-feature-settings: "cv11", "ss01"; }
+
+    /* Sidebar link */
+    .nav-link {
+      transition: all 0.15s ease;
+    }
+    .nav-link:hover {
+      background: rgba(255,255,255,0.06);
+      color: #F1F5F9;
+    }
+    .nav-link.active {
+      background: rgba(239,68,68,0.12);
+      color: #F87171;
+    }
+    .nav-link.active .nav-icon {
+      color: #F87171;
+    }
+
+    /* Stat card hover */
+    .stat-card {
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .stat-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+      transform: translateY(-2px);
+    }
+
+    /* Table row */
+    .tbl-row {
+      transition: background-color 0.1s ease;
+    }
+    .tbl-row:hover {
+      background: #F8FAFC;
+    }
+
+    /* Pulse for pending */
+    .pulse-dot {
+      position: relative;
+    }
+    .pulse-dot::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      background: #EF4444;
+      opacity: 0.4;
+      animation: pulseDot 2s ease-in-out infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 0.4; }
+      50% { transform: scale(1.8); opacity: 0; }
+    }
+
+    /* Stock bar fill */
+    .stock-fill {
+      transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    /* Quick view button */
+    .qv-btn {
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .qv-btn:hover {
+      background: #F1F5F9;
+      color: #1E293B;
+    }
+
+    /* Toast */
+    .toast-enter { animation: toastSlide 0.35s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .toast-exit { animation: toastFade 0.25s ease forwards; }
+    @keyframes toastSlide { from { opacity:0; transform:translateX(16px) scale(0.97); } to { opacity:1; transform:translateX(0) scale(1); } }
+    @keyframes toastFade { from { opacity:1; } to { opacity:0; transform:translateX(8px) scale(0.97); } }
+
+    /* Mobile sidebar */
+    .sidebar-overlay { transition: opacity 0.25s ease; }
+    .sidebar-panel { transition: transform 0.3s cubic-bezier(0.16,1,0.3,1); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 3px; }
+    .dark-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+
+    /* Badge count */
+    .badge-count {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Low stock item hover */
+    .stock-item {
+      transition: background-color 0.1s ease;
+    }
+    .stock-item:hover {
+      background: #FAFBFC;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 font-sans text-brand-dark min-h-screen">
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-4 right-4 z-[200] flex flex-col gap-2 items-end"></div>
+
+  <!-- Mobile Overlay -->
+  <div id="sidebar-overlay" class="sidebar-overlay fixed inset-0 bg-black/40 z-[90] hidden opacity-0 lg:hidden" onclick="closeSidebar()"></div>
+
+  <div class="flex min-h-screen">
+
+    <!-- ====== SIDEBAR ====== -->
+    <aside id="sidebar" class="sidebar-panel fixed lg:sticky top-0 left-0 z-[100] w-60 h-screen bg-brand-dark flex flex-col -translate-x-full lg:translate-x-0 dark-scroll overflow-y-auto">
+
+      <!-- Logo -->
+      <div class="flex items-center gap-2.5 px-5 h-16 border-b border-white/[0.06] shrink-0">
+        <div class="w-7 h-7 bg-brand-red rounded-lg flex items-center justify-center">
+          <i data-lucide="cog" class="w-3.5 h-3.5 text-white"></i>
+        </div>
+        <div>
+          <span class="text-sm font-semibold text-white tracking-tight block leading-none">AutoPart</span>
+          <span class="text-[9px] text-slate-500 font-medium tracking-wider uppercase">Admin Panel</span>
+        </div>
+        <button onclick="closeSidebar()" class="lg:hidden ml-auto w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Admin Profile -->
+      <div class="px-5 py-4 border-b border-white/[0.06]">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center shrink-0">
+            <i data-lucide="shield" class="w-4 h-4 text-slate-400"></i>
+          </div>
+          <div class="min-w-0">
+            <p class="text-xs font-semibold text-slate-200 truncate">Admin Utama</p>
+            <p class="text-[10px] text-slate-500 truncate">admin@autopartcenter.id</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="flex-1 py-4 px-3">
+        <p class="px-2.5 mb-2 text-[9px] font-semibold text-slate-600 uppercase tracking-widest">Menu</p>
+
+        <button onclick="switchNav('dashboard')" class="nav-link active w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-slate-400 mb-0.5" data-nav="dashboard">
+          <i data-lucide="layout-dashboard" class="w-[18px] h-[18px] nav-icon text-slate-500 shrink-0"></i>
+          Dashboard
+        </button>
+        <button onclick="switchNav('produk')" class="nav-link w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-slate-400 mb-0.5" data-nav="produk">
+          <i data-lucide="package" class="w-[18px] h-[18px] nav-icon text-slate-500 shrink-0"></i>
+          CRUD Produk
+        </button>
+        <button onclick="switchNav('kategori')" class="nav-link w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-slate-400 mb-0.5" data-nav="kategori">
+          <i data-lucide="tags" class="w-[18px] h-[18px] nav-icon text-slate-500 shrink-0"></i>
+          Kategori & Brand
+        </button>
+        <button onclick="switchNav('verifikasi')" class="nav-link w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-slate-400 mb-0.5" data-nav="verifikasi">
+          <i data-lucide="clipboard-check" class="w-[18px] h-[18px] nav-icon text-slate-500 shrink-0"></i>
+          Verifikasi Pesanan
+          <span class="ml-auto w-5 h-5 bg-brand-red text-white text-[10px] font-bold rounded-full flex items-center justify-center badge-count">5</span>
+        </button>
+        <button onclick="switchNav('laporan')" class="nav-link w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-slate-400 mb-0.5" data-nav="laporan">
+          <i data-lucide="bar-chart-3" class="w-[18px] h-[18px] nav-icon text-slate-500 shrink-0"></i>
+          Laporan Penjualan
+        </button>
+
+        <p class="px-2.5 mt-6 mb-2 text-[9px] font-semibold text-slate-600 uppercase tracking-widest">Sistem</p>
+
+        <button class="nav-link w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-slate-400 mb-0.5">
+          <i data-lucide="settings" class="w-[18px] h-[18px] nav-icon text-slate-500 shrink-0"></i>
+          Pengaturan
+        </button>
+        <a href="#" class="nav-link flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-slate-500 hover:text-red-400">
+          <i data-lucide="log-out" class="w-[18px] h-[18px] shrink-0"></i>
+          Logout
+        </a>
+      </nav>
+
+      <!-- Sidebar Footer -->
+      <div class="px-5 py-4 border-t border-white/[0.06] shrink-0">
+        <p class="text-[9px] text-slate-700 text-center">AutoPart Center v1.0</p>
+      </div>
+    </aside>
+
+    <!-- ====== MAIN AREA ====== -->
+    <div class="flex-1 min-w-0 flex flex-col">
+
+      <!-- Top Bar -->
+      <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 h-14 flex items-center px-4 sm:px-6 shrink-0">
+        <button onclick="openSidebar()" class="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-50 text-slate-500 mr-3">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+        <h2 class="text-sm font-semibold text-brand-dark">Dashboard</h2>
+        <div class="ml-auto flex items-center gap-2">
+          <div class="hidden sm:flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 h-8">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400"></i>
+            <input type="text" placeholder="Cari..." class="w-40 bg-transparent text-xs text-brand-dark placeholder-slate-400 ml-2 outline-none">
+            <kbd class="text-[9px] text-slate-400 bg-white border border-slate-200 rounded px-1">⌘K</kbd>
+          </div>
+          <button class="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-50 text-slate-400">
+            <i data-lucide="bell" class="w-4 h-4"></i>
+            <span class="absolute top-1 right-1 w-2 h-2 bg-brand-red rounded-full pulse-dot"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- Greeting -->
+        <div class="mb-6">
+          <h1 class="text-lg sm:text-xl font-bold text-brand-dark tracking-tight">Selamat Datang, Admin</h1>
+          <p class="text-xs text-slate-400 mt-0.5">Berikut ringkasan operasional hari ini, 15 Juni 2025.</p>
+        </div>
+
+        <!-- ====== ROW 1: KPI CARDS ====== -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+          <!-- Total Penjualan -->
+          <div class="stat-card bg-white rounded-xl border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center">
+                <i data-lucide="trending-up" class="w-4 h-4 text-blue-500"></i>
+              </div>
+              <span class="inline-flex items-center gap-0.5 text-[10px] font-semibold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
+                <i data-lucide="arrow-up-right" class="w-2.5 h-2.5"></i>
+                +12.5%
+              </span>
+            </div>
+            <p class="text-2xl font-bold text-slate-900 tabular-nums">Rp47.2jt</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Total Penjualan Bulan Ini</p>
+            <!-- Mini sparkline -->
+            <svg class="mt-3 w-full h-8" viewBox="0 0 200 32" fill="none" preserveAspectRatio="none">
+              <polyline points="0,28 20,24 40,26 60,18 80,20 100,12 120,14 140,8 160,10 180,4 200,6" stroke="#3B82F6" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="0,28 20,24 40,26 60,18 80,20 100,12 120,14 140,8 160,10 180,4 200,6" stroke="url(#sparkBlue)" stroke-width="0" fill="url(#sparkBlue)"/>
+              <defs>
+                <linearGradient id="sparkBlue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.15"/>
+                  <stop offset="100%" stop-color="#3B82F6" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+
+          <!-- Pesanan Baru -->
+          <div class="stat-card bg-white rounded-xl border-2 border-brand-red/30 p-5 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-20 h-20 bg-brand-red/5 rounded-bl-[40px]"></div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-9 h-9 bg-brand-red-light rounded-lg flex items-center justify-center">
+                <i data-lucide="clipboard-list" class="w-4 h-4 text-brand-red"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-brand-red bg-brand-red-light px-1.5 py-0.5 rounded">
+                <span class="w-1.5 h-1.5 bg-brand-red rounded-full pulse-dot"></span>
+                Perlu Verifikasi
+              </span>
+            </div>
+            <p class="text-2xl font-bold text-slate-900 tabular-nums">5</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Pesanan Menunggu Verifikasi</p>
+            <button onclick="switchNav('verifikasi'); closeSidebar();" class="mt-3 text-[11px] font-semibold text-brand-red hover:text-brand-red-hover transition-colors flex items-center gap-1">
+              Lihat Semua <i data-lucide="arrow-right" class="w-3 h-3"></i>
+            </button>
+          </div>
+
+          <!-- Total Produk -->
+          <div class="stat-card bg-white rounded-xl border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-9 h-9 bg-violet-50 rounded-lg flex items-center justify-center">
+                <i data-lucide="boxes" class="w-4 h-4 text-violet-500"></i>
+              </div>
+              <span class="inline-flex items-center gap-0.5 text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                <i data-lucide="plus" class="w-2.5 h-2.5"></i>
+                12 baru
+              </span>
+            </div>
+            <p class="text-2xl font-bold text-slate-900 tabular-nums">1,247</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Total SKU Terdaftar</p>
+            <div class="flex items-center gap-3 mt-3">
+              <span class="text-[10px] text-slate-400"><span class="font-semibold text-slate-600">842</span> Mobil</span>
+              <span class="w-1 h-1 bg-slate-200 rounded-full"></span>
+              <span class="text-[10px] text-slate-400"><span class="font-semibold text-slate-600">405</span> Motor</span>
+            </div>
+          </div>
+
+          <!-- Stok Menipis -->
+          <div class="stat-card bg-white rounded-xl border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center">
+                <i data-lucide="alert-triangle" class="w-4 h-4 text-brand-red"></i>
+              </div>
+              <span class="inline-flex items-center gap-0.5 text-[10px] font-semibold text-brand-red bg-brand-red-light px-1.5 py-0.5 rounded">
+                <i data-lucide="arrow-down-right" class="w-2.5 h-2.5"></i>
+                Kritis
+              </span>
+            </div>
+            <p class="text-2xl font-bold text-brand-red tabular-nums">8</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Produk Stok &lt; 5 Unit</p>
+            <div class="flex items-center gap-3 mt-3">
+              <span class="text-[10px] text-slate-400"><span class="font-semibold text-brand-red">3</span> Habis</span>
+              <span class="w-1 h-1 bg-slate-200 rounded-full"></span>
+              <span class="text-[10px] text-slate-400"><span class="font-semibold text-amber-600">5</span> Menipis</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== ROW 2: Tables ====== -->
+        <div class="grid lg:grid-cols-5 gap-6">
+
+          <!-- LEFT: Order Verification Queue (3 cols) -->
+          <div class="lg:col-span-3 bg-white rounded-xl border border-slate-200">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <div class="flex items-center gap-2.5">
+                <h3 class="text-sm font-semibold text-brand-dark">Antrian Verifikasi</h3>
+                <span class="w-5 h-5 bg-brand-red text-white text-[10px] font-bold rounded-full flex items-center justify-center badge-count">5</span>
+              </div>
+              <button onclick="switchNav('verifikasi'); closeSidebar();" class="text-[11px] font-medium text-brand-red hover:text-brand-red-hover transition-colors flex items-center gap-1">
+                Lihat Semua <i data-lucide="arrow-right" class="w-3 h-3"></i>
+              </button>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead>
+                  <tr class="border-b border-slate-100">
+                    <th class="px-5 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">ID Pesanan</th>
+                    <th class="px-5 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Customer</th>
+                    <th class="px-5 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden sm:table-cell">Tanggal</th>
+                    <th class="px-5 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total</th>
+                    <th class="px-5 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                    <th class="px-5 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="orders-tbody">
+                  <!-- Injected by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- RIGHT: Low Stock Items (2 cols) -->
+          <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <div class="flex items-center gap-2.5">
+                <h3 class="text-sm font-semibold text-brand-dark">Stok Menipis</h3>
+                <span class="w-5 h-5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full flex items-center justify-center badge-count">8</span>
+              </div>
+              <button onclick="switchNav('produk'); closeSidebar();" class="text-[11px] font-medium text-slate-400 hover:text-brand-dark transition-colors flex items-center gap-1">
+                Kelola <i data-lucide="arrow-right" class="w-3 h-3"></i>
+              </button>
+            </div>
+
+            <!-- Stock List -->
+            <div id="stock-list" class="divide-y divide-slate-50">
+              <!-- Injected by JS -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ====== ROW 3: Recent Activity ====== -->
+        <div class="mt-6 bg-white rounded-xl border border-slate-200">
+          <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+            <h3 class="text-sm font-semibold text-brand-dark">Aktivitas Terbaru</h3>
+            <div class="flex items-center gap-2">
+              <button onclick="filterActivity('all')" class="act-filter active px-2.5 py-1 text-[10px] font-medium rounded-md bg-slate-100 text-slate-500 transition-colors" data-act="all">Semua</button>
+              <button onclick="filterActivity('pesanan')" class="act-filter px-2.5 py-1 text-[10px] font-medium rounded-md text-slate-400 hover:bg-slate-50 transition-colors" data-act="pesanan">Pesanan</button>
+              <button onclick="filterActivity('produk')" class="act-filter px-2.5 py-1 text-[10px] font-medium rounded-md text-slate-400 hover:bg-slate-50 transition-colors" data-act="produk">Produk</button>
+            </div>
+          </div>
+          <div id="activity-list" class="divide-y divide-slate-50">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== QUICK VIEW MODAL ====== -->
+  <div id="qv-modal" class="fixed inset-0 z-[150] hidden">
+    <div class="absolute inset-0 bg-black/30" onclick="closeModal()"></div>
+    <div class="absolute inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-lg bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+        <h3 class="text-sm font-semibold text-brand-dark">Detail Pesanan</h3>
+        <button onclick="closeModal()" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-400">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div id="qv-body" class="flex-1 overflow-y-auto p-5">
+        <!-- Injected -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== DATA ====================
+
+    const pendingOrders = [
+      { id: 'TRX-20250615-008', customer: 'Ahmad Rizky', wa: '0812-3456-7890', tanggal: '2025-06-15 14:23', total: 1785000, items: [{nama:'Brake Pad Bendix', qty:2, harga:485000},{nama:'Busi NGK Iridium', qty:1, harga:95000},{nama:'Aki G-Force 45Ah', qty:1, harga:720000}], alamat: 'Jl. Otomotif Raya No. 88, Jakarta Selatan' },
+      { id: 'TRX-20250615-009', customer: 'Budi Santoso', wa: '0878-1234-5678', tanggal: '2025-06-15 13:10', total: 485000, items: [{nama:'Brake Pad Bendix', qty:1, harga:485000}], alamat: 'Jl. Merdeka No. 12, Bandung' },
+      { id: 'TRX-20250615-010', customer: 'Dewi Lestari', wa: '0856-7890-1234', tanggal: '2025-06-15 11:45', total: 1250000, items: [{nama:'Oil Filter Denso (x3)', qty:3, harga:65000},{nama:'Aki G-Force 45Ah', qty:1, harga:720000},{nama:'Disc Brake Honda Beat', qty:2, harga:185000}], alamat: 'Jl. Sudirman Kav. 52, Surabaya' },
+      { id: 'TRX-20250615-011', customer: 'Eko Prasetyo', wa: '0813-4567-8901', tanggal: '2025-06-15 10:02', total: 320000, items: [{nama:'Busi NGK Iridium (x2)', qty:2, harga:95000},{nama:'Disc Brake Honda Beat', qty:1, harga:185000}], alamat: 'Jl. Gatot Subroto No. 5, Yogyakarta' },
+      { id: 'TRX-20250615-012', customer: 'Fitri Handayani', wa: '0821-5678-9012', tanggal: '2025-06-15 09:15', total: 65000, items: [{nama:'Oil Filter Denso', qty:1, harga:65000}], alamat: 'Jl. Ahmad Yani No. 100, Semarang' },
+    ];
+
+    const lowStockItems = [
+      { nama: 'Brake Pad Bendix', kode: 'PRD-001', stok: 2, maxStok: 50, kategori: 'Rem' },
+      { nama: 'Aki G-Force 45Ah', kode: 'PRD-004', stok: 3, maxStok: 30, kategori: 'Kelistrikan' },
+      { nama: 'Disc Brake Honda Beat', kode: 'PRD-005', stok: 4, maxStok: 40, kategori: 'Rem' },
+      { nama: 'Busi NGK Iridium', kode: 'PRD-003', stok: 4, maxStok: 100, kategori: 'Mesin' },
+      { nama: 'Radiator Xpander', kode: 'PRD-006', stok: 1, maxStok: 15, kategori: 'Mesin' },
+      { nama: 'Filter Udara Racing', kode: 'PRD-008', stok: 0, maxStok: 60, kategori: 'Mesin' },
+      { nama: 'Kampas Kopling NMAX', kode: 'PRD-009', stok: 0, maxStok: 35, kategori: 'Mesin' },
+      { nama: 'Lampu LED H4 6000K', kode: 'PRD-010', stok: 0, maxStok: 80, kategori: 'Kelistrikan' },
+    ];
+
+    const activities = [
+      { type: 'pesanan', icon: 'package', color: 'blue', text: 'Pesanan <strong>TRX-20250615-008</strong> menunggu verifikasi bukti transfer', time: '14 menit lalu' },
+      { type: 'produk', icon: 'alert-triangle', color: 'red', text: 'Stok <strong>Filter Udara Racing</strong> habis (0 unit)', time: '32 menit lalu' },
+      { type: 'pesanan', icon: 'check-circle', color: 'green', text: 'Pesanan <strong>TRX-20250614-003</strong> berhasil diverifikasi oleh Admin', time: '1 jam lalu' },
+      { type: 'pesanan', icon: 'truck', color: 'green', text: 'Pesanan <strong>TRX-20250613-001</strong> status diperbarui: Dikirim', time: '2 jam lalu' },
+      { type: 'produk', icon: 'package-plus', color: 'violet', text: 'Produk baru <strong>Rantai Keteng NMAX</strong> berhasil ditambahkan', time: '3 jam lalu' },
+      { type: 'pesanan', icon: 'x-circle', color: 'red', text: 'Pesanan <strong>TRX-20250612-007</strong> dibatalkan oleh customer', time: '5 jam lalu' },
+    ];
+
+    let activityFilter = 'all';
+
+    // ==================== HELPERS ====================
+    function fmt(n) { return 'Rp' + n.toLocaleString('id-ID'); }
+    function fmtDate(ts) { const d = new Date(ts); return d.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }); }
+    function fmtTime(ts) { const d = new Date(ts); return d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' }); }
+
+    // ==================== RENDER: Orders ====================
+    function renderOrders() {
+      const tbody = document.getElementById('orders-tbody');
+      tbody.innerHTML = pendingOrders.map(o => `
+        <tr class="tbl-row border-b border-slate-50 last:border-0">
+          <td class="px-5 py-3">
+            <p class="text-xs font-mono font-semibold text-brand-dark">${o.id}</p>
+            <p class="text-[10px] text-slate-400 sm:hidden">${fmtDate(o.tanggal)}</p>
+          </td>
+          <td class="px-5 py-3">
+            <p class="text-xs font-medium text-brand-dark">${o.customer}</p>
+            <p class="text-[10px] text-slate-400">${o.wa}</p>
+          </td>
+          <td class="px-5 py-3 text-xs text-slate-500 hidden sm:table-cell">
+            <p>${fmtDate(o.tanggal)}</p>
+            <p class="text-[10px] text-slate-400">${fmtTime(o.tanggal)}</p>
+          </td>
+          <td class="px-5 py-3 text-xs font-semibold text-brand-dark tabular-nums">${fmt(o.total)}</td>
+          <td class="px-5 py-3">
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-semibold rounded-md">
+              <span class="w-1.5 h-1.5 bg-amber-500 rounded-full pulse-dot"></span>
+              Menunggu
+            </span>
+          </td>
+          <td class="px-5 py-3 text-right">
+            <button onclick='openModal("${o.id}")' class="qv-btn inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium text-slate-500 rounded-md">
+              <i data-lucide="eye" class="w-3 h-3"></i>
+              Quick View
+            </button>
+          </td>
+        </tr>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    // ==================== RENDER: Stock ====================
+    function renderStock() {
+      const list = document.getElementById('stock-list');
+      list.innerHTML = lowStockItems.map(item => {
+        const pct = item.maxStok > 0 ? (item.stok / item.maxStok * 100) : 0;
+        const isOut = item.stok === 0;
+        const isCritical = item.stok > 0 && item.stok <= 3;
+
+        let barColor = 'bg-green-400';
+        if (isOut) barColor = 'bg-red-400';
+        else if (isCritical) barColor = 'bg-red-400';
+        else if (pct <= 15) barColor = 'bg-amber-400';
+
+        let badge = '';
+        if (isOut) badge = '<span class="inline-flex px-1.5 py-0.5 bg-red-100 text-red-600 text-[9px] font-bold rounded">HABIS</span>';
+        else if (isCritical) badge = '<span class="inline-flex px-1.5 py-0.5 bg-red-50 text-red-500 text-[9px] font-bold rounded">KRITIS</span>';
+        else badge = '<span class="inline-flex px-1.5 py-0.5 bg-amber-50 text-amber-600 text-[9px] font-bold rounded">Menipis</span>';
+
+        return `
+          <div class="stock-item px-5 py-3.5 flex items-center gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-0.5">
+                <p class="text-xs font-medium text-brand-dark truncate">${item.nama}</p>
+                ${badge}
+              </div>
+              <p class="text-[10px] text-slate-400">${item.kode} · ${item.kategori}</p>
+              <div class="flex items-center gap-2 mt-2">
+                <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div class="stock-fill h-full ${barColor} rounded-full" style="width:${pct}%"></div>
+                </div>
+                <span class="text-[10px] font-semibold ${isOut ? 'text-red-500' : isCritical ? 'text-red-500' : 'text-amber-600'} tabular-nums w-12 text-right">${item.stok}/${item.maxStok}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    // ==================== RENDER: Activity ====================
+    function renderActivity() {
+      const list = document.getElementById('activity-list');
+      let filtered = activityFilter === 'all' ? activities : activities.filter(a => a.type === activityFilter);
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="px-5 py-8 text-center text-xs text-slate-400">Tidak ada aktivitas dengan filter ini.</div>';
+        return;
+      }
+
+      const colorMap = { blue:'bg-blue-50 text-blue-500', green:'bg-green-50 text-green-500', red:'bg-red-50 text-red-500', violet:'bg-violet-50 text-violet-500' };
+
+      list.innerHTML = filtered.map(a => `
+        <div class="flex items-start gap-3 px-5 py-3.5">
+          <div class="w-7 h-7 ${colorMap[a.color] || 'bg-slate-50 text-slate-400'} rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+            <i data-lucide="${a.icon}" class="w-3.5 h-3.5"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs text-slate-600 leading-relaxed">${a.text}</p>
+          </div>
+          <span class="text-[10px] text-slate-400 whitespace-nowrap shrink-0 mt-0.5">${a.time}</span>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function filterActivity(type) {
+      activityFilter = type;
+      document.querySelectorAll('.act-filter').forEach(btn => {
+        btn.classList.remove('active', 'bg-slate-100', 'text-slate-500');
+        btn.classList.add('text-slate-400');
+        if (btn.dataset.act === type) {
+          btn.classList.add('active', 'bg-slate-100', 'text-slate-500');
+          btn.classList.remove('text-slate-400');
+        }
+      });
+      renderActivity();
+    }
+
+    // ==================== QUICK VIEW MODAL ====================
+    function openModal(orderId) {
+      const o = pendingOrders.find(p => p.id === orderId);
+      if (!o) return;
+
+      const modal = document.getElementById('qv-modal');
+      const body = document.getElementById('qv-body');
+
+      const itemsHtml = o.items.map(i => `
+        <div class="flex items-center justify-between py-2.5 border-b border-slate-50 last:border-0">
+          <div>
+            <p class="text-xs font-medium text-brand-dark">${i.nama}</p>
+            <p class="text-[10px] text-slate-400">${i.qty} × ${fmt(i.harga)}</p>
+          </div>
+          <p class="text-xs font-semibold text-brand-dark tabular-nums">${fmt(i.qty * i.harga)}</p>
+        </div>
+      `).join('');
+
+      body.innerHTML = `
+        <div class="space-y-5">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-semibold text-brand-dark">${o.id}</p>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-semibold rounded-md">
+              <span class="w-1.5 h-1.5 bg-amber-500 rounded-full pulse-dot"></span>
+              Menunggu Verifikasi
+            </span>
+          </div>
+
+          <div class="bg-slate-50 rounded-lg p-4 space-y-2.5">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">Customer</span>
+              <span class="font-medium text-brand-dark">${o.customer}</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">WhatsApp</span>
+              <span class="font-medium text-brand-dark">${o.wa}</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">Tanggal</span>
+              <span class="font-medium text-brand-dark">${fmtDate(o.tanggal)} ${fmtTime(o.tanggal)}</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">Alamat</span>
+              <span class="font-medium text-brand-dark text-right max-w-[220px]">${o.alamat}</span>
+            </div>
+          </div>
+
+          <div>
+            <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Item Pesanan</p>
+            <div class="bg-slate-50 rounded-lg px-4 py-2">${itemsHtml}</div>
+          </div>
+
+          <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+            <span class="text-sm font-semibold text-brand-dark">Total Bayar</span>
+            <span class="text-lg font-bold text-brand-dark tabular-nums">${fmt(o.total)}</span>
+          </div>
+
+          <div>
+            <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Bukti Transfer</p>
+            <div class="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center">
+              <i data-lucide="image" class="w-8 h-8 text-slate-300 mx-auto mb-2"></i>
+              <p class="text-xs text-slate-500">bukti_transfer_${o.id}.jpg</p>
+              <p class="text-[10px] text-slate-400 mt-0.5">245 KB</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 pt-2">
+            <button onclick="verifyOrder('${o.id}', 'diproses')" class="h-10 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white text-xs font-semibold rounded-lg transition-colors">
+              <i data-lucide="check" class="w-3.5 h-3.5 mr-1.5"></i>
+              Verifikasi
+            </button>
+            <button onclick="verifyOrder('${o.id}', 'dibatalkan')" class="h-10 flex items-center justify-center bg-white border border-slate-200 text-slate-600 text-xs font-semibold rounded-lg hover:bg-slate-50 transition-colors">
+              <i data-lucide="x" class="w-3.5 h-3.5 mr-1.5"></i>
+              Tolak
+            </button>
+          </div>
+        </div>
+      `;
+
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeModal() {
+      document.getElementById('qv-modal').classList.add('hidden');
+    }
+
+    function verifyOrder(id, status) {
+      const label = status === 'diproses' ? 'diverifikasi' : 'ditolak';
+      showToast(`Pesanan ${id} berhasil ${label}`, 'success');
+      closeModal();
+
+      // Remove from list
+      const idx = pendingOrders.findIndex(o => o.id === id);
+      if (idx >= 0) pendingOrders.splice(idx, 1);
+      renderOrders();
+    }
+
+    // ==================== SIDEBAR ====================
+    function switchNav(nav) {
+      document.querySelectorAll('.nav-link').forEach(el => {
+        el.classList.remove('active');
+        if (el.dataset.nav === nav) el.classList.add('active');
+      });
+      if (nav !== 'dashboard') {
+        showToast(`Halaman "${nav}" — dalam pengembangan`, 'info');
+      }
+    }
+
+    function openSidebar() {
+      const overlay = document.getElementById('sidebar-overlay');
+      const sidebar = document.getElementById('sidebar');
+      overlay.classList.remove('hidden');
+      requestAnimationFrame(() => { overlay.style.opacity = '1'; sidebar.style.transform = 'translateX(0)'; });
+    }
+    function closeSidebar() {
+      const overlay = document.getElementById('sidebar-overlay');
+      const sidebar = document.getElementById('sidebar');
+      overlay.style.opacity = '0';
+      sidebar.style.transform = 'translateX(-100%)';
+      setTimeout(() => overlay.classList.add('hidden'), 250);
+    }
+
+    // ==================== TOAST ====================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      let bg, icon, bc;
+      switch (type) {
+        case 'success': bg='bg-green-50 border-green-200'; icon='check-circle'; bc='border-l-4 border-l-green-500'; break;
+        case 'error': bg='bg-red-50 border-red-200'; icon='x-circle'; bc='border-l-4 border-l-red-500'; break;
+        default: bg='bg-slate-50 border-slate-200'; icon='info'; bc='border-l-4 border-l-slate-400';
+      }
+      const ic = type==='success'?'text-green-500':type==='error'?'text-red-500':'text-slate-500';
+      const tc = type==='success'?'text-green-800':type==='error'?'text-red-800':'text-slate-700';
+      toast.className = `toast-enter flex items-start gap-3 px-4 py-3 rounded-lg border shadow-sm max-w-sm w-full ${bg} ${bc}`;
+      toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 ${ic} shrink-0 mt-0.5"></i><span class="text-sm ${tc} leading-snug">${message}</span>`;
+      container.appendChild(toast);
+      lucide.createIcons();
+      setTimeout(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 250); }, 3500);
+    }
+
+    // ==================== INIT ====================
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      renderOrders();
+      renderStock();
+      renderActivity();
+    });
+  </script>
+</body>
+</html>

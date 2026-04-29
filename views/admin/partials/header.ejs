@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              red: '#EF4444',
+              'red-hover': '#DC2626',
+              'red-light': '#FEF2F2',
+              dark: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-feature-settings: "cv11", "ss01"; }
+    .nav-link { transition: all 0.15s ease; color: #94A3B8; }
+    .nav-link:hover { background: rgba(255,255,255,0.06); color: #F1F5F9; }
+    .nav-link.active { background: rgba(239,68,68,0.12); color: #F87171; }
+    .list-row { transition: background-color 0.1s ease; }
+    .list-row:hover { background: #F8FAFC; }
+    
+    .toast-enter { animation: toastSlide 0.35s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .toast-exit { animation: toastFade 0.25s ease forwards; }
+    @keyframes toastSlide { from { opacity:0; transform:translateX(16px) scale(0.97); } to { opacity:1; transform:translateX(0) scale(1); } }
+    @keyframes toastFade { from { opacity:1; } to { opacity:0; transform:translateX(8px) scale(0.97); } }
+    
+    .modal-overlay { transition: opacity 0.2s ease; }
+    .modal-panel { transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16,1,0.3,1); }
+    
+    /* MODAL FIX: Using display none to prevent blocking clicks when hidden */
+    .modal-hidden { display: none !important; }
+    
+    .input-field { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+    .input-field:focus { border-color: #EF4444; box-shadow: 0 0 0 2px rgba(239,68,68,0.12); outline: none; }
+    .sidebar-panel { transition: transform 0.3s cubic-bezier(0.16,1,0.3,1); }
+  </style>
+</head>
+<body class="bg-slate-50 font-sans text-brand-dark min-h-screen">
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-[200] flex flex-col gap-2 items-end pointer-events-none"></div>
+    
+    <!-- Mobile Overlay -->
+    <div id="sidebar-overlay" class="sidebar-overlay fixed inset-0 bg-black/40 z-[90] hidden opacity-0 lg:hidden" onclick="closeSidebar()"></div>
+
+    <div class="flex min-h-screen">
