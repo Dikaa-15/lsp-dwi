@@ -80,8 +80,13 @@
                 <i data-lucide="map-pin" class="w-5 h-5 text-slate-400"></i>
                 <h2 class="text-sm font-semibold">Alamat Pengiriman</h2>
               </div>
-              <textarea name="alamat_pengiriman" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-md p-3 text-sm focus:outline-none focus:border-brand-red" placeholder="Tulis alamat pengiriman lengkap di sini" required></textarea>
-              <p class="text-[11px] text-slate-400 mt-2">WhatsApp: <%= userData.whatsapp || '-' %></p>
+              <textarea name="alamat_pengiriman" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-md p-3 text-sm focus:outline-none focus:border-brand-red" placeholder="Tulis alamat pengiriman lengkap di sini" required><%= userData.alamat_lengkap || '' %></textarea>
+              <p class="text-[11px] text-slate-400 mt-2">
+                WhatsApp: <%= userData.whatsapp || '-' %>
+                <% if (userData.alamat_lengkap) { %>
+                  <span class="ml-2 text-emerald-600 font-medium">Alamat tersimpan sudah diisi otomatis</span>
+                <% } %>
+              </p>
             </div>
 
             <!-- Payment Method -->
