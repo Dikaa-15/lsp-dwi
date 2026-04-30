@@ -12,6 +12,7 @@ build/
 .next/
 
 public/
+assets/
 
 # Log files
 npm-debug.log*
