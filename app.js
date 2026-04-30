@@ -44,12 +44,31 @@ app.use((req, res, next) => {
     
     if (req.session.user) {
         const db = require('./library/database');
-        db.query('SELECT COUNT(*) as count FROM keranjang WHERE user_id = ?', [req.session.user.id], (err, results) => {
-            res.locals.cartCount = results ? results[0].count : 0;
-            next();
+        
+        // Count items in cart for any logged in user
+        db.query('SELECT COUNT(*) as count FROM keranjang WHERE user_id = ?', [req.session.user.id], (err, cartResults) => {
+            res.locals.cartCount = cartResults ? cartResults[0].count : 0;
+
+            if (req.session.user.role === 'admin') {
+                // If admin, count pending orders to verify
+                db.query('SELECT COUNT(*) as count FROM pembelian WHERE status = "menunggu_verifikasi"', (err, orderResults) => {
+                    res.locals.pendingOrdersCount = orderResults ? orderResults[0].count : 0;
+                    res.locals.activeOrdersCount = 0;
+                    next();
+                });
+            } else {
+                // If customer, count active orders (to track)
+                db.query('SELECT COUNT(*) as count FROM pembelian WHERE user_id = ? AND status IN ("menunggu_verifikasi", "diproses", "dikirim")', [req.session.user.id], (err, orderResults) => {
+                    res.locals.activeOrdersCount = orderResults ? orderResults[0].count : 0;
+                    res.locals.pendingOrdersCount = 0;
+                    next();
+                });
+            }
         });
     } else {
         res.locals.cartCount = 0;
+        res.locals.pendingOrdersCount = 0;
+        res.locals.activeOrdersCount = 0;
         next();
     }
 });

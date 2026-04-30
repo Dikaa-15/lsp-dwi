@@ -121,8 +121,8 @@
                     <p class="text-xs font-bold text-brand-dark">Rp<%= o.total_bayar.toLocaleString('id-ID') %></p>
                 </div>
                 <div>
-                    <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Resi</p>
-                    <p class="text-xs font-mono font-medium text-slate-600"><%= o.resi || '-' %></p>
+                    <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Kurir / Resi</p>
+                    <p class="text-xs font-medium text-slate-600"><span class="uppercase font-bold"><%= o.metode_pengiriman %></span> · <%= o.resi || '-' %></p>
                 </div>
             </div>
 

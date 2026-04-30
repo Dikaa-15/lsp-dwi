@@ -62,12 +62,26 @@ router.get('/', isCustomer, (req, res) => {
 
 // POST Process Checkout
 router.post('/process', isCustomer, upload.single('bukti_transfer'), (req, res) => {
-    const { item_ids, total_bayar, alamat_pengiriman, metode_pembayaran } = req.body;
+    const { item_ids, total_bayar: subtotal_bayar, alamat_pengiriman, metode_pembayaran, metode_pengiriman } = req.body;
     const user_id = req.session.user.id;
     const paymentMethod = (metode_pembayaran || 'bca').toLowerCase();
+    const shippingMethod = (metode_pengiriman || 'regular').toLowerCase();
     const requiresProof = paymentMethod !== 'cod';
     const bukti_transfer = req.file ? '/images/bukti_transfer/' + req.file.filename : null;
     const id_pembelian = 'INV-' + Date.now();
+
+    // Define shipping costs
+    const shippingCosts = {
+        regular: 8000,
+        express: 15000,
+        sameday: 20000
+    };
+
+    // Get the shipping cost based on the selected method
+    const shippingCost = shippingCosts[shippingMethod] || shippingCosts.regular; // Default to regular if invalid
+
+    // Calculate final total
+    const finalTotalBayar = parseInt(subtotal_bayar) + shippingCost;
 
     if (req.fileValidationError) {
         req.flash('error', req.fileValidationError);
@@ -83,10 +97,11 @@ router.post('/process', isCustomer, upload.single('bukti_transfer'), (req, res) 
     const pembelian = {
         id_pembelian,
         user_id,
-        total_bayar,
+        total_bayar: finalTotalBayar, // Use the calculated total
         status: 'menunggu_verifikasi',
         bukti_transfer,
         metode_pembayaran: paymentMethod,
+        metode_pengiriman: shippingMethod,
         alamat_pengiriman
     };
 

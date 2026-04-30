@@ -86,6 +86,41 @@
               </p>
             </div>
 
+            <!-- Shipping Method -->
+            <div class="bg-white rounded-md border border-slate-200 p-6 shadow-sm">
+              <div class="flex items-center gap-2.5 mb-4">
+                <i data-lucide="truck" class="w-5 h-5 text-slate-400"></i>
+                <h2 class="text-sm font-semibold">Metode Pengiriman</h2>
+              </div>
+              <input type="hidden" name="metode_pengiriman" id="shipping-method" value="regular">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button type="button" class="payment-card selected border border-slate-200 p-4 rounded-md text-center" data-ship="regular" data-price="8000" onclick="selectShippingMethod(this)">
+                    <span class="payment-check absolute top-3 right-3 w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center">
+                      <i data-lucide="check" class="w-3 h-3"></i>
+                    </span>
+                    <p class="payment-title text-sm font-bold">Regular</p>
+                    <p class="text-[10px] text-slate-500 mt-1">Estimasi 2-4 Hari</p>
+                    <p class="text-[10px] font-bold text-brand-red mt-1">Rp8.000</p>
+                </button>
+                <button type="button" class="payment-card border border-slate-200 p-4 rounded-md text-center" data-ship="express" data-price="15000" onclick="selectShippingMethod(this)">
+                    <span class="payment-check absolute top-3 right-3 w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center">
+                      <i data-lucide="check" class="w-3 h-3"></i>
+                    </span>
+                    <p class="payment-title text-sm font-bold">Express</p>
+                    <p class="text-[10px] text-slate-500 mt-1">Estimasi 1-2 Hari</p>
+                    <p class="text-[10px] font-bold text-brand-red mt-1">Rp15.000</p>
+                </button>
+                <button type="button" class="payment-card border border-slate-200 p-4 rounded-md text-center" data-ship="sameday" data-price="20000" onclick="selectShippingMethod(this)">
+                    <span class="payment-check absolute top-3 right-3 w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center">
+                      <i data-lucide="check" class="w-3 h-3"></i>
+                    </span>
+                    <p class="payment-title text-sm font-bold">Sameday</p>
+                    <p class="text-[10px] text-slate-500 mt-1">Tiba hari ini</p>
+                    <p class="text-[10px] font-bold text-brand-red mt-1">Rp20.000</p>
+                </button>
+              </div>
+            </div>
+
             <!-- Payment Method -->
             <div class="bg-white rounded-md border border-slate-200 p-6 shadow-sm">
               <div class="flex items-center gap-2.5 mb-4">
@@ -180,12 +215,38 @@
 
               <div class="h-px bg-slate-200 mb-6"></div>
               
-              <input type="hidden" name="total_bayar" value="<%= subtotal %>">
-              <div class="flex justify-between items-end mb-8">
-                <span class="text-sm font-semibold">Total Bayar</span>
-                <span class="text-xl font-bold text-brand-dark">Rp<%= subtotal.toLocaleString('id-ID') %></span>
+              <div class="space-y-2 mb-6">
+                <div class="flex justify-between text-xs text-slate-500">
+                  <span>Subtotal Produk</span>
+                  <span>Rp<%= subtotal.toLocaleString('id-ID') %></span>
+                </div>
+                <div class="flex justify-between text-xs text-slate-500">
+                  <span>Biaya Pengiriman</span>
+                  <span id="shipping-fee-display">Rp8.000</span>
+                </div>
               </div>
 
+              <div class="h-px bg-slate-200 mb-6"></div>
+
+              <div class="space-y-2 mb-6">
+                <div class="flex justify-between text-xs text-slate-500">
+                  <span>Subtotal Produk</span>
+                  <span>Rp<%= subtotal.toLocaleString('id-ID') %></span>
+                </div>
+                <div class="flex justify-between text-xs text-slate-500">
+                  <span>Biaya Pengiriman</span>
+                  <span id="shipping-fee-display">Rp8.000</span>
+                </div>
+              </div>
+
+              <div class="h-px bg-slate-200 mb-6"></div>
+
+              <input type="hidden" name="subtotal_produk" id="subtotal-produk-input" value="<%= subtotal %>">
+              <input type="hidden" name="total_bayar" id="total-bayar-input" value="<%= subtotal + 8000 %>">
+              <div class="flex justify-between items-end mb-8">
+                <span class="text-sm font-semibold">Total Bayar</span>
+                <span id="total-bayar-display" class="text-xl font-bold text-brand-dark">Rp<%= (subtotal + 8000).toLocaleString('id-ID') %></span>
+              </div>
               <button type="submit" class="w-full h-12 bg-brand-red hover:bg-brand-red-hover text-white text-sm font-semibold rounded-md transition-all shadow-lg shadow-brand-red/20">
                 Konfirmasi & Bayar
               </button>
@@ -196,8 +257,32 @@
   </main>
 
   <script>
-    function selectPaymentMethod(el) {
-        const method = el.dataset.method;
+    function selectShippingMethod(el) {
+        const method = el.dataset.ship;
+        const price = parseInt(el.dataset.price);
+
+        document.getElementById('shipping-method').value = method;
+
+        // Update shipping fee display
+        document.getElementById('shipping-fee-display').textContent = `Rp${price.toLocaleString('id-ID')}`;
+
+        // Update total bayar
+        // Get subtotal from hidden input
+        const subtotal = parseInt(document.getElementById('subtotal-produk-input').value);
+        const newTotal = subtotal + price; // Calculate new total with selected shipping
+        document.getElementById('total-bayar-input').value = newTotal;
+        document.getElementById('total-bayar-display').textContent = `Rp${newTotal.toLocaleString('id-ID')}`;
+
+        // Remove 'selected' from all shipping buttons
+        const shippingGrid = el.closest('.grid');
+        shippingGrid.querySelectorAll('.payment-card').forEach(card => card.classList.remove('selected'));
+
+        // Add 'selected' to clicked button
+        el.classList.add('selected');
+        lucide.createIcons();
+    }
+
+    function selectPaymentMethod(el) {        const method = el.dataset.method;
         const needsProof = el.dataset.needsProof === 'true';
         const uploadSection = document.getElementById('transfer-upload');
         const proofInput = document.getElementById('bukti-input');

@@ -29,7 +29,11 @@
         </a>
 
         <a href="/admin/pesanan" class="nav-link flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-slate-400 mb-0.5 <%= title.includes('Pesanan') ? 'active' : '' %>">
-            <i data-lucide="clipboard-check" class="w-[18px] h-[18px] nav-icon shrink-0"></i> Pesanan
+            <i data-lucide="clipboard-check" class="w-[18px] h-[18px] nav-icon shrink-0"></i> 
+            <span class="flex-1">Pesanan</span>
+            <% if (pendingOrdersCount > 0) { %>
+                <span class="bg-brand-red text-white text-[10px] font-bold px-2 py-0.5 rounded-full"><%= pendingOrdersCount %></span>
+            <% } %>
         </a>
 
         <p class="px-2.5 mt-6 mb-2 text-[9px] font-semibold text-slate-600 uppercase tracking-widest">Sistem</p>

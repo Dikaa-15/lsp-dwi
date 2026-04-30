@@ -60,8 +60,13 @@
       </a>
       <div class="ml-auto flex items-center gap-4">
         <% if (locals.user) { %>
-            <a href="/users/pesanan" class="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-600" title="Lacak Pesanan">
+            <a href="/users/pesanan" class="relative w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-600" title="Lacak Pesanan">
                 <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                <% if (activeOrdersCount > 0) { %>
+                    <span class="absolute -top-1 -right-1 w-5 h-5 bg-brand-red text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white transition-all">
+                        <%= activeOrdersCount %>
+                    </span>
+                <% } %>
             </a>
             <a href="/users/profile" class="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-50 text-slate-600" title="Profil">
                 <i data-lucide="user" class="w-5 h-5"></i>

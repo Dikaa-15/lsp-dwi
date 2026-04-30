@@ -38,7 +38,9 @@ connection.connect(function (error) {
         ensureColumn('users', 'avatar', 'VARCHAR(255) NULL AFTER whatsapp', () => {
             ensureColumn('pembelian', 'metode_pembayaran', "VARCHAR(20) DEFAULT 'bca' AFTER bukti_transfer", () => {
                 ensureColumn('pembelian', 'resi', 'VARCHAR(100) NULL AFTER metode_pembayaran', () => {
-                    ensureColumn('pembelian', 'alasan_penolakan', 'TEXT NULL AFTER resi');
+                    ensureColumn('pembelian', 'alasan_penolakan', 'TEXT NULL AFTER resi', () => {
+                        ensureColumn('pembelian', 'metode_pengiriman', "VARCHAR(50) DEFAULT 'regular' AFTER alasan_penolakan");
+                    });
                 });
             });
         });
