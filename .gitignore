@@ -1,0 +1,22 @@
+# Dependency folders (sangat berat, jangan di-upload)
+node_modules/
+bower_components/
+
+# Environment variables (berisi password/database key)
+.env
+.env.local
+
+# Build folders
+dist/
+build/
+.next/
+
+public/
+
+# Log files
+npm-debug.log*
+yarn-error.log*
+
+# Mac & Windows system files
+.DS_Store
+Thumbs.db
