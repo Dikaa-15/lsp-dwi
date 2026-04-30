@@ -18,17 +18,70 @@ router.use((req, res, next) => {
 
 // GET Dashboard
 router.get('/dashboard', (req, res) => {
-    db.query('SELECT COUNT(*) as count FROM produk', (err, prod) => {
-        db.query('SELECT COUNT(*) as count FROM pembelian WHERE status = "menunggu_verifikasi"', (err, orders) => {
-            db.query('SELECT COUNT(*) as count FROM kategori', (err, kat) => {
-                res.render('admin/dashboard', { 
-                    title: 'Dashboard — AutoPart Admin',
-                    stats: {
-                        totalPenjualan: 'Rp0',
-                        pesananBaru: orders[0].count,
-                        totalProduk: prod[0].count,
-                        stokMenipis: 0
-                    }
+    const qTotalProduk = 'SELECT COUNT(*) as count FROM produk';
+    const qPesananBaru = 'SELECT COUNT(*) as count FROM pembelian WHERE status = "menunggu_verifikasi"';
+    const qStokMenipis = 'SELECT COUNT(*) as count FROM produk WHERE stok < 5';
+    const qTotalPenjualan = 'SELECT SUM(total_bayar) as total FROM pembelian WHERE status IN ("diproses", "dikirim", "selesai")';
+    
+    const qRecentOrders = `
+        SELECT p.*, u.username 
+        FROM pembelian p 
+        JOIN users u ON p.user_id = u.id 
+        ORDER BY p.tanggal_transaksi DESC 
+        LIMIT 5
+    `;
+
+    const qTopProducts = `
+        SELECT p.nama_produk, SUM(pd.jumlah) as terjual, p.gambar
+        FROM pembelian_detail pd 
+        JOIN produk p ON pd.kode_produk = p.kode_produk 
+        GROUP BY pd.kode_produk 
+        ORDER BY terjual DESC 
+        LIMIT 5
+    `;
+
+    const qLowStock = `
+        SELECT nama_produk, stok, gambar 
+        FROM produk 
+        WHERE stok < 10 
+        ORDER BY stok ASC 
+        LIMIT 5
+    `;
+
+    const qSalesGrowth = `
+        SELECT DATE(tanggal_transaksi) as tgl, SUM(total_bayar) as total 
+        FROM pembelian 
+        WHERE status IN ("diproses", "dikirim", "selesai") 
+        AND tanggal_transaksi >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        GROUP BY DATE(tanggal_transaksi)
+        ORDER BY tgl ASC
+    `;
+
+    db.query(qTotalProduk, (err, prod) => {
+        db.query(qPesananBaru, (err, orders) => {
+            db.query(qStokMenipis, (err, lowStockCount) => {
+                db.query(qTotalPenjualan, (err, sales) => {
+                    db.query(qRecentOrders, (err, recentOrders) => {
+                        db.query(qTopProducts, (err, topProducts) => {
+                            db.query(qLowStock, (err, lowStockProducts) => {
+                                db.query(qSalesGrowth, (err, salesGrowth) => {
+                                    res.render('admin/dashboard', { 
+                                        title: 'Dashboard — AutoPart Admin',
+                                        stats: {
+                                            totalPenjualan: sales[0].total || 0,
+                                            pesananBaru: orders[0].count,
+                                            totalProduk: prod[0].count,
+                                            stokMenipis: lowStockCount[0].count
+                                        },
+                                        recentOrders: recentOrders || [],
+                                        topProducts: topProducts || [],
+                                        lowStockProducts: lowStockProducts || [],
+                                        salesGrowth: salesGrowth || []
+                                    });
+                                });
+                            });
+                        });
+                    });
                 });
             });
         });
