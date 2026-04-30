@@ -251,8 +251,9 @@ router.get('/pesanan', (req, res) => {
 
 // Update Status Pesanan
 router.post('/pesanan/update-status', (req, res) => {
-    const { id_pembelian, status, no_resi } = req.body;
+    const { id_pembelian, status, no_resi, alasan_penolakan } = req.body;
     const resi = (no_resi || '').trim();
+    const alasan = (alasan_penolakan || '').trim();
 
     if (status === 'selesai') {
         return res.json({ success: false, message: 'Penyelesaian pesanan dilakukan oleh customer' });
@@ -262,6 +263,10 @@ router.post('/pesanan/update-status', (req, res) => {
         return res.json({ success: false, message: 'Nomor resi wajib diisi saat pesanan dikirim' });
     }
 
+    if (status === 'dibatalkan' && !alasan) {
+        return res.json({ success: false, message: 'Alasan penolakan wajib diisi' });
+    }
+
     const updateOrder = () => {
         let query = 'UPDATE pembelian SET status = ?';
         let params = [status];
@@ -269,6 +274,11 @@ router.post('/pesanan/update-status', (req, res) => {
         if (resi) {
             query += ', resi = ?';
             params.push(resi);
+        }
+
+        if (alasan) {
+            query += ', alasan_penolakan = ?';
+            params.push(alasan);
         }
 
         query += ' WHERE id_pembelian = ?';

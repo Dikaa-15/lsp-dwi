@@ -54,7 +54,11 @@
         </thead>
         <tbody id="product-tbody">
             <% produkList.forEach(p => { %>
-                <tr class="list-row border-b border-slate-50 last:border-0">
+                <tr class="list-row border-b border-slate-50 last:border-0" 
+                    data-nama="<%= p.nama_produk.toLowerCase() %>" 
+                    data-kode="<%= p.kode_produk.toLowerCase() %>"
+                    data-kategori="<%= p.kategori_id %>"
+                    data-brand="<%= p.brand_id %>">
                     <td class="px-4 py-3 text-[13px] font-mono font-medium text-slate-500"><%= p.kode_produk %></td>
                     <td class="px-4 py-3">
                         <div class="w-10 h-10 bg-slate-50 rounded-md overflow-hidden flex items-center justify-center border border-slate-100 p-1">
@@ -209,6 +213,39 @@
 
         document.getElementById('produk-modal').classList.remove('modal-hidden');
     }
+
+    // Filtering Logic
+    const searchInput = document.getElementById('search-input');
+    const filterKategori = document.getElementById('filter-kategori');
+    const filterBrand = document.getElementById('filter-brand');
+    const rows = document.querySelectorAll('.list-row');
+
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const katId = filterKategori.value;
+        const brandId = filterBrand.value;
+
+        rows.forEach(row => {
+            const nama = row.getAttribute('data-nama');
+            const kode = row.getAttribute('data-kode');
+            const rowKat = row.getAttribute('data-kategori');
+            const rowBrand = row.getAttribute('data-brand');
+
+            const matchSearch = nama.includes(searchTerm) || kode.includes(searchTerm);
+            const matchKat = katId === '' || rowKat === katId;
+            const matchBrand = brandId === '' || rowBrand === brandId;
+
+            if (matchSearch && matchKat && matchBrand) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    filterKategori.addEventListener('change', filterTable);
+    filterBrand.addEventListener('change', filterTable);
 </script>
 
 <%- include('../partials/footer') %>
